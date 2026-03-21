@@ -1,0 +1,23 @@
+# Ignora a pasta .venv que o VS Code criou (aquela cheia de arquivos)
+.venv/
+venv/
+env/
+
+# Ignora as planilhas com os emails e outros dados dos alunos (privacidade)
+data/*.xlsx
+data/*.csv
+
+# Ignora os certificados que o Python vai gerar (pra não lotar o GitHub de fotos)
+output/
+
+# Arquivos temporários que o Python cria sozinho
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configurações do VS Code pessoal
+.vscode/
+
+# Arquivos invisíveis do Windows/Mac
+Thumbs.db
+.DS_Store
