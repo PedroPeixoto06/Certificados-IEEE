@@ -1,9 +1,9 @@
-# Ignora a pasta .venv que o VS Code criou (aquela cheia de arquivos)
+# Ignora a pasta .venv 
 .venv/
 venv/
 env/
 
-# Ignora as planilhas com os emails e outros dados dos alunos (privacidade)
+# Ignora as planilhas com dados pessoais
 data/*.xlsx
 data/*.csv
 
@@ -15,7 +15,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Configurações do VS Code pessoal
+# Configurações pessoais do VS Code 
 .vscode/
 
 # Arquivos invisíveis do Windows/Mac
