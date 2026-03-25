@@ -7,8 +7,8 @@ env/
 data/*.xlsx
 data/*.csv
 
-data/dados_teste.csv
-data/dados_teste.xlsx
+!data/dados_teste.csv
+!data/dados_teste.xlsx
 
 # Ignora os certificados que o Python vai gerar (pra não lotar o GitHub de fotos)
 output/
