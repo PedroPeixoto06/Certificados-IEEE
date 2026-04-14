@@ -3,7 +3,7 @@ import os
 import time
 
 from leitor_csv import carregar_dados_cvs
-from motor_imagem import desenhar_nome_centralizado, preparar_canvas
+from motor_imagem import desenhar_nome_centralizado, carregar_assets
 from exportador import exportar_certificado
 
 # Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
@@ -49,6 +49,9 @@ def iniciar_geracao():
     img_base = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['imagem_base'])
     fonte_path = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['fonte_nome'])
     planilha = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['planilha_dados'])
+    tam_fonte = infos['fonte']['tamanho']
+    nome_da_pasta = infos['arquivos'].get('pasta_saida', 'certificados_prontos')
+    pasta_saida = os.path.join(DIRETORIO_RAIZ, nome_da_pasta)
     
     pos_x = infos['posicao_nome']['x']
     pos_y = infos['posicao_nome']['y']
@@ -69,9 +72,31 @@ def iniciar_geracao():
     print(f"[ASSETS] Carregando imagem e fonte...")
 
     try:
-        imagem_base, fonte = preparar_canvas(img_base, fonte_path)
-    
-    
+        imagem_base, fonte = carregar_assets(img_base, fonte_path, tam_fonte)
 
+    except Exception as e:
+        print(f'[ERRO] Falha ao carregar os assets: {e}')
+        return
+
+    print(f"\n[STATUS] Processando {len(participantes)} certificados...")
+    tempo_inicio = time.time()
+
+    for aluno in participantes:
+        nome = aluno['nome']
+
+        copia_imagem = imagem_base.copy()
+
+        imagem_pronta = desenhar_nome_centralizado(copia_imagem, nome, fonte, pos_y)
+
+        exportar_certificado(imagem_pronta, nome, pasta_saida)
+
+        copia_imagem.close()
+
+        duracao = round(time.time() - tempo_inicio, 2)
+
+        print("\n" + "=" * 50)
+        print(f"[SUCESSO] CONCLUIDO EM {duracao} segundos")
+        print(f"[DIRETORIO] CERTIFICADOS EM: {pasta_saida}")
+        print("=" * 50)
 if __name__ == "__main__":
     iniciar_geracao()

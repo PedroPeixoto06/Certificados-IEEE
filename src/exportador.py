@@ -1,5 +1,3 @@
-# src/exportador.py
-
 from PIL import Image
 import os
 
