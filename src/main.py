@@ -1,8 +1,10 @@
 import json
 import os
-# As importações abaixo serão usadas na Fase 2
-# from PIL import Image, ImageDraw, ImageFont 
-# import pandas as pd
+import time
+
+from leitor_csv import carregar_dados_cvs
+from motor_imagem import desenhar_nome_centralizado, preparar_canvas
+from exportador import exportar_certificado
 
 # Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
@@ -45,7 +47,7 @@ def iniciar_geracao():
     infos = config['configuracoes_certificado']
     
     img_base = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['imagem_base'])
-    fonte = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['fonte_nome'])
+    fonte_path = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['fonte_nome'])
     planilha = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['planilha_dados'])
     
     pos_x = infos['posicao_nome']['x']
@@ -53,12 +55,23 @@ def iniciar_geracao():
 
     print(f"\n[INFO] Parâmetros lidos com sucesso:")
     print(f" -> Imagem Base: {img_base}")
-    print(f" -> Fonte Oficial: {fonte}")
+    print(f" -> Fonte Oficial: {fonte_path}")
     print(f" -> Coordenadas de Injeção: X={pos_x}, Y={pos_y}")
     print(f" -> Planilha Alvo: {planilha}\n")
 
-    # 2. Espaço reservado para a Fase 2 (A injeção do Pillow entrará aqui)
-    print("[STATUS] Aguardando implementação da Fase 2 (Leitura do CSV e Pillow)...")
+    print(f'\n [DADOS] Lendo: {infos["arquivos"]["planilha_dados"]}')
+    participantes = carregar_dados_cvs(planilha)
+
+    if not participantes:
+        print("[FALHA] Nenhum participante encontrado na planilha.")
+        return
+    
+    print(f"[ASSETS] Carregando imagem e fonte...")
+
+    try:
+        imagem_base, fonte = preparar_canvas(img_base, fonte_path)
+    
+    
 
 if __name__ == "__main__":
     iniciar_geracao()
