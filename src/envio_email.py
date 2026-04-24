@@ -5,6 +5,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import dotenv
+from dotenv import load_dotenv
 
 # ==============================================================================
 # DEMANDA 1: INFRAESTRUTURA E AUTENTICAÇÃO (Caio e Yasmin)
@@ -12,6 +14,11 @@ from email import encoders
 # ==============================================================================
 # TODO (Caio/Yasmin): Importar o dotenv (load_dotenv).
 # TODO (Caio/Yasmin): Ler as variáveis EMAIL_REMETENTE e SENHA_REMETENTE.
+
+load_dotenv()
+
+EMAIL_REMETENTE  = os.getenv("email_user")
+SENHA_REMETENTE  = os.getenv("senha_user")
 
 def disparar_email(lista_alunos, pasta_certificados):
     print("="*50)
@@ -21,6 +28,12 @@ def disparar_email(lista_alunos, pasta_certificados):
     # TODO (Caio/Yasmin): Instanciar smtplib.SMTP na porta 587.
     # TODO (Caio/Yasmin): Executar starttls() e fazer o login.
     # servidor_smtp = ...
+
+    servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587) #abre uma conexão TCP com o servidor smtp.gmail.com na porta 587
+    servidor_smtp.ehlo()
+    servidor_smtp.starttls() 
+    servidor_smtp.ehlo()
+    servidor_smtp.login(EMAIL_REMETENTE, SENHA_REMETENTE)
 
     # Loop principal de envio para cada aluno da planilha
     for aluno in lista_alunos:
@@ -57,7 +70,9 @@ def disparar_email(lista_alunos, pasta_certificados):
 
         # --- DISPARO EFETIVO (Caio/Yasmin) ---
         # TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
-        # servidor_smtp.send_message(msg)
+        servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
+        print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
+
 
 
         # ==============================================================================
