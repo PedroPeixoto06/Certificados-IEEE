@@ -68,6 +68,42 @@ def disparar_email(lista_alunos, pasta_certificados):
         # TODO: Definir msg['From'], msg['To'] e msg['Subject'].
         # TODO: Criar o corpo em HTML e anexar com MIMEText.
 
+def criar_pacote_email(nome_aluno, email_destino):
+
+    msg = MIMEMultipart()
+    
+    msg['From'] = "IEEE Student Branch UFC <email-IEEE@gmail.com>"  #colcar o email do ramo que vai enviar os certificados
+    msg['To'] = email_destino
+    msg['Subject'] = f"Certificado Disponível: {nome_aluno} - evento IEEE"
+
+    html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: auto; border: 1px solid #004a99; border-radius: 10px; overflow: hidden;">
+                <div style="background-color: #004a99; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">Parabéns, {nome_aluno}!</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Olá!</p>
+                    <p>É com grande alegria que o <b>IEEE Student Branch UFC</b> disponibiliza o seu certificado.</p>
+                    <p>O documento está anexado a este e-mail em formato PDF.</p>
+                    <p style="background-color: #f4f4f4; padding: 10px; border-left: 5px solid #004a99;">
+                        Agradecemos a sua participação!
+                    </p>
+                </div>
+                <div style="background-color: #eee; padding: 10px; text-align: center; font-size: 12px; color: #666;">
+                    Equipe de Projetos IEEE UFC
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+
+    corpo_email = MIMEText(html, 'html')
+    msg.attach(corpo_email)
+
+    return msg
+
 
         # ==============================================================================
         # DEMANDA 3: ANEXAÇÃO DINÂMICA
