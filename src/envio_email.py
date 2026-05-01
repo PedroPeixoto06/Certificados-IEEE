@@ -10,11 +10,11 @@ from dotenv import load_dotenv
 import random
 
 # ==============================================================================
-# DEMANDA 1: INFRAESTRUTURA E AUTENTICAÇÃO (Caio e Yasmin)
+# INFRAESTRUTURA E AUTENTICAÇÃO
 # Objetivo: Carregar as variáveis do .env e criar a conexão segura com o Google.
 # ==============================================================================
-# (Caio/Yasmin): Importar o dotenv (load_dotenv).
-# (Caio/Yasmin): Ler as variáveis EMAIL_REMETENTE e SENHA_REMETENTE.
+#  Importar o dotenv (load_dotenv).
+#  Ler as variáveis EMAIL_REMETENTE e SENHA_REMETENTE.
 
 load_dotenv()
 
@@ -26,8 +26,8 @@ def disparar_email(lista_alunos, pasta_certificados):
     print("[INÍCIO] INICIANDO MOTOR DE ENVIO DE EMAILS")
     print("="*50)
 
-    # (Caio/Yasmin): Executar starttls() e fazer o login.
-    # (Caio/Yasmin): Instanciar smtplib.SMTP na porta 587.
+    # Executar starttls() e fazer o login.
+    # Instanciar smtplib.SMTP na porta 587.
     # servidor_smtp = ...
 
     servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587) #abre uma conexão TCP com o servidor smtp.gmail.com na porta 587
@@ -79,7 +79,7 @@ def disparar_email(lista_alunos, pasta_certificados):
         # TODO: Fechar o arquivo PDF da memória.
 
 
-        # --- DISPARO EFETIVO (Caio/Yasmin) ---
+        # --- DISPARO EFETIVO ---
         # TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
         servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
         print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
@@ -90,8 +90,8 @@ def disparar_email(lista_alunos, pasta_certificados):
         # DEMANDA 4: CONTROLE ANTIBLOQUEIO 
         # Objetivo: Fazer o script "respirar" entre envios para evitar punição de Spam.
         # ==============================================================================
-        # TODO: Usar time.sleep() para criar uma pausa de 3 a 5 segundos.
-        # TODO: Adicionar um print informando o tempo de espera.
+        #  Usar time.sleep() para criar uma pausa de 3 a 5 segundos.
+        #  Adicionar um print informando o tempo de espera.
 
         def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
             
@@ -112,11 +112,6 @@ def disparar_email(lista_alunos, pasta_certificados):
                 print(f"  ⏳ Aguardando {segundos}s antes do próximo envio...")
                 time.sleep(segundos)
 
-
-        # TODO (Continuação da Demanda 5): 
-        # Criar o bloco 'except Exception as e:'. 
-        # Abrir 'relatorio_erros.txt' em modo 'a', escrever a falha.
-        # Usar o comando 'continue' para pular para o próximo aluno.
 
     # TODO (Caio/Yasmin): Fechar a conexão SMTP com servidor_smtp.quit() no final de tudo.
     print("\n[SUCESSO] Linha de disparo finalizada.")
