@@ -7,6 +7,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 import dotenv
 from dotenv import load_dotenv
+import random
 
 # ==============================================================================
 # DEMANDA 1: INFRAESTRUTURA E AUTENTICAÇÃO (Caio e Yasmin)
@@ -81,6 +82,25 @@ def disparar_email(lista_alunos, pasta_certificados):
         # ==============================================================================
         # TODO: Usar time.sleep() para criar uma pausa de 3 a 5 segundos.
         # TODO: Adicionar um print informando o tempo de espera.
+
+        def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
+            
+            #Injeta uma pausa estratégica entre os envios de e-mail para evitar
+            #bloqueio por comportamento de spam.
+
+            #Args:
+                #modo:     "fixo"    → pausa sempre igual (time.sleep(segundos))
+                        #"humano"  → pausa aleatória entre 3 e 6s (mais natural)
+                #segundos: Duração base da pausa no modo "fixo" (padrão: 3).
+           
+           
+            if modo == "humano":
+                pausa = round(random.uniform(3.0, 6.0), 2)
+                print(f"  ⏳ Pausa humanizada: {pausa}s...")
+                time.sleep(pausa)
+            else:
+                print(f"  ⏳ Aguardando {segundos}s antes do próximo envio...")
+                time.sleep(segundos)
 
 
         # TODO (Continuação da Demanda 5): 
