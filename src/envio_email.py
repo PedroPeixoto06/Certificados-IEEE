@@ -13,8 +13,8 @@ import random
 # DEMANDA 1: INFRAESTRUTURA E AUTENTICAÇÃO (Caio e Yasmin)
 # Objetivo: Carregar as variáveis do .env e criar a conexão segura com o Google.
 # ==============================================================================
-# TODO (Caio/Yasmin): Importar o dotenv (load_dotenv).
-# TODO (Caio/Yasmin): Ler as variáveis EMAIL_REMETENTE e SENHA_REMETENTE.
+# (Caio/Yasmin): Importar o dotenv (load_dotenv).
+# (Caio/Yasmin): Ler as variáveis EMAIL_REMETENTE e SENHA_REMETENTE.
 
 load_dotenv()
 
@@ -26,8 +26,8 @@ def disparar_email(lista_alunos, pasta_certificados):
     print("[INÍCIO] INICIANDO MOTOR DE ENVIO DE EMAILS")
     print("="*50)
 
-    # TODO (Caio/Yasmin): Instanciar smtplib.SMTP na porta 587.
-    # TODO (Caio/Yasmin): Executar starttls() e fazer o login.
+    # (Caio/Yasmin): Executar starttls() e fazer o login.
+    # (Caio/Yasmin): Instanciar smtplib.SMTP na porta 587.
     # servidor_smtp = ...
 
     servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587) #abre uma conexão TCP com o servidor smtp.gmail.com na porta 587
@@ -42,12 +42,22 @@ def disparar_email(lista_alunos, pasta_certificados):
         email_aluno = aluno['email']
 
         # ==============================================================================
-        # DEMANDA 5: RESILIÊNCIA E LOGS
+        # RESILIÊNCIA E LOGS
         # Objetivo: Envolver o processo num Try/Except para o sistema não quebrar.
         # ==============================================================================
-        # TODO: Iniciar o bloco 'try:' aqui.
+        # Iniciar o bloco 'try:' aqui.
+        
+        try:
+            print(f"[PROCESSANDO] Montando certificado para {nome_aluno} ({email_aluno})")
 
-        print(f"[PROCESSANDO] Montando certificado para {nome_aluno} ({email_aluno})")
+
+        except Exception as e:
+                # Captura o erro para que o programa não seja interrompido
+                with open('erros_envio.txt', 'a', encoding='utf-8') as f_erro:
+                    f_erro.write(f"Falha ao enviar para {nome_aluno} ({email_aluno}) | Erro: {str(e)}\n")
+                
+                print(f"[ERRO] Falha no envio para {nome_aluno}. Erro registrado em erros_envio.txt. Pulando para o próximo...")
+                continue
 
 
         # ==============================================================================
@@ -93,7 +103,7 @@ def disparar_email(lista_alunos, pasta_certificados):
                         #"humano"  → pausa aleatória entre 3 e 6s (mais natural)
                 #segundos: Duração base da pausa no modo "fixo" (padrão: 3).
            
-           
+
             if modo == "humano":
                 pausa = round(random.uniform(3.0, 6.0), 2)
                 print(f"  ⏳ Pausa humanizada: {pausa}s...")
