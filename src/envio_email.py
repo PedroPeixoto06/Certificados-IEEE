@@ -61,12 +61,12 @@ def disparar_email(lista_alunos, pasta_certificados):
 
 
         # ==============================================================================
-        # DEMANDA 2: COMPOSIÇÃO ESTRUTURADA MIME
+        # COMPOSIÇÃO ESTRUTURADA MIME
         # Objetivo: Criar o "envelope", o Assunto e o Corpo do e-mail em HTML.
         # ==============================================================================
-        # TODO: Criar o objeto msg = MIMEMultipart().
-        # TODO: Definir msg['From'], msg['To'] e msg['Subject'].
-        # TODO: Criar o corpo em HTML e anexar com MIMEText.
+        #  Criar o objeto msg = MIMEMultipart().
+        #  Definir msg['From'], msg['To'] e msg['Subject'].
+        #  Criar o corpo em HTML e anexar com MIMEText.
 
 def criar_pacote_email(nome_aluno, email_destino):
 
@@ -109,16 +109,17 @@ def criar_pacote_email(nome_aluno, email_destino):
         # DEMANDA 3: ANEXAÇÃO DINÂMICA
         # Objetivo: Encontrar o PDF do aluno em modo binário e anexar ao envelope.
         # ==============================================================================
-        # TODO: Montar o caminho exato do arquivo PDF.
-        # TODO: Abrir o PDF em modo 'rb' (leitura binária).
-        # TODO: Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
-        # TODO: Fechar o arquivo PDF da memória.
+        #  Montar o caminho exato do arquivo PDF.
+        #  Abrir o PDF em modo 'rb' (leitura binária).
+        #  Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
+        #  Fechar o arquivo PDF da memória.
 
 
         # --- DISPARO EFETIVO ---
         # TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
-        servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
-        print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
+        
+    servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
+    print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
 
 
 
