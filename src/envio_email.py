@@ -26,8 +26,8 @@ def disparar_email(lista_alunos, pasta_certificados):
     print("[INÍCIO] INICIANDO MOTOR DE ENVIO DE EMAILS")
     print("="*50)
 
-    # TODO (Caio/Yasmin): Instanciar smtplib.SMTP na porta 587.
-    # TODO (Caio/Yasmin): Executar starttls() e fazer o login.
+    # Executar starttls() e fazer o login.
+    # Instanciar smtplib.SMTP na porta 587.
     # servidor_smtp = ...
 
     servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587) #abre uma conexão TCP com o servidor smtp.gmail.com na porta 587
@@ -42,12 +42,22 @@ def disparar_email(lista_alunos, pasta_certificados):
         email_aluno = aluno['email']
 
         # ==============================================================================
-        # DEMANDA 5: RESILIÊNCIA E LOGS
+        # RESILIÊNCIA E LOGS
         # Objetivo: Envolver o processo num Try/Except para o sistema não quebrar.
         # ==============================================================================
-        # TODO: Iniciar o bloco 'try:' aqui.
+        # Iniciar o bloco 'try:' aqui.
+        
+        try:
+            print(f"[PROCESSANDO] Montando certificado para {nome_aluno} ({email_aluno})")
 
-        print(f"[PROCESSANDO] Montando certificado para {nome_aluno} ({email_aluno})")
+
+        except Exception as e:
+                # Captura o erro para que o programa não seja interrompido
+                with open('erros_envio.txt', 'a', encoding='utf-8') as f_erro:
+                    f_erro.write(f"Falha ao enviar para {nome_aluno} ({email_aluno}) | Erro: {str(e)}\n")
+                
+                print(f"[ERRO] Falha no envio para {nome_aluno}. Erro registrado em erros_envio.txt. Pulando para o próximo...")
+                continue
 
 
         # ==============================================================================
@@ -69,7 +79,7 @@ def disparar_email(lista_alunos, pasta_certificados):
         # TODO: Fechar o arquivo PDF da memória.
 
 
-        # --- DISPARO EFETIVO (Caio/Yasmin) ---
+        # --- DISPARO EFETIVO ---
         # TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
         servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
         print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
@@ -102,11 +112,25 @@ def disparar_email(lista_alunos, pasta_certificados):
                 print(f"  Aguardando {segundos}s antes do próximo envio...")
                 time.sleep(segundos)
 
+        def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
+            
+            #Injeta uma pausa estratégica entre os envios de e-mail para evitar
+            #bloqueio por comportamento de spam.
 
-        # TODO (Continuação da Demanda 5): 
-        # Criar o bloco 'except Exception as e:'. 
-        # Abrir 'relatorio_erros.txt' em modo 'a', escrever a falha.
-        # Usar o comando 'continue' para pular para o próximo aluno.
+            #Args:
+                #modo:     "fixo"    → pausa sempre igual (time.sleep(segundos))
+                        #"humano"  → pausa aleatória entre 3 e 6s (mais natural)
+                #segundos: Duração base da pausa no modo "fixo" (padrão: 3).
+           
+
+            if modo == "humano":
+                pausa = round(random.uniform(3.0, 6.0), 2)
+                print(f"  ⏳ Pausa humanizada: {pausa}s...")
+                time.sleep(pausa)
+            else:
+                print(f"  ⏳ Aguardando {segundos}s antes do próximo envio...")
+                time.sleep(segundos)
+
 
     # TODO (Caio/Yasmin): Fechar a conexão SMTP com servidor_smtp.quit() no final de tudo.
     print("\n[SUCESSO] Linha de disparo finalizada.")
