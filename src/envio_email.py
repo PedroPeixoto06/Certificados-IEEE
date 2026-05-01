@@ -112,25 +112,6 @@ def disparar_email(lista_alunos, pasta_certificados):
                 print(f"  Aguardando {segundos}s antes do próximo envio...")
                 time.sleep(segundos)
 
-        def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
-            
-            #Injeta uma pausa estratégica entre os envios de e-mail para evitar
-            #bloqueio por comportamento de spam.
-
-            #Args:
-                #modo:     "fixo"    → pausa sempre igual (time.sleep(segundos))
-                        #"humano"  → pausa aleatória entre 3 e 6s (mais natural)
-                #segundos: Duração base da pausa no modo "fixo" (padrão: 3).
-           
-
-            if modo == "humano":
-                pausa = round(random.uniform(3.0, 6.0), 2)
-                print(f"  ⏳ Pausa humanizada: {pausa}s...")
-                time.sleep(pausa)
-            else:
-                print(f"  ⏳ Aguardando {segundos}s antes do próximo envio...")
-                time.sleep(segundos)
-
 
     # TODO (Caio/Yasmin): Fechar a conexão SMTP com servidor_smtp.quit() no final de tudo.
     print("\n[SUCESSO] Linha de disparo finalizada.")
