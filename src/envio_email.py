@@ -105,50 +105,50 @@ def criar_pacote_email(nome_aluno, email_destino):
     return msg
 
 
-        # ==============================================================================
-        # DEMANDA 3: ANEXAÇÃO DINÂMICA
-        # Objetivo: Encontrar o PDF do aluno em modo binário e anexar ao envelope.
-        # ==============================================================================
-        #  Montar o caminho exato do arquivo PDF.
-        #  Abrir o PDF em modo 'rb' (leitura binária).
-        #  Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
-        #  Fechar o arquivo PDF da memória.
+# ==============================================================================
+# DEMANDA 3: ANEXAÇÃO DINÂMICA
+# Objetivo: Encontrar o PDF do aluno em modo binário e anexar ao envelope.
+# ==============================================================================
+#  Montar o caminho exato do arquivo PDF.
+#  Abrir o PDF em modo 'rb' (leitura binária).
+#  Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
+#  Fechar o arquivo PDF da memória.
 
 
-        # --- DISPARO EFETIVO ---
-        # TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
-        
-    servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
-    print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
-
-
-
-        # ==============================================================================
-        # CONTROLE ANTIBLOQUEIO 
-        # Objetivo: Fazer o script "respirar" entre envios para evitar punição de Spam.
-        # ==============================================================================
-        # Usar time.sleep() para criar uma pausa de 3 a 5 segundos.
-        # Adicionar um print informando o tempo de espera.
-
-        def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
+# --- DISPARO EFETIVO ---
+# TODO (Caio/Yasmin): Usar o servidor_smtp para enviar a 'msg' montada pelo Pedro e Juan.
     
-        #Injeta uma pausa estratégica entre os envios de e-mail para evitar
-        #bloqueio por comportamento de spam.
-
-        #Args:
-        #modo:     "fixo"    → pausa sempre igual (time.sleep(segundos))
-        #"humano"  → pausa aleatória entre 3 e 6s (mais natural)
-        #segundos: Duração base da pausa no modo "fixo" (padrão: 3).
-    
-    
-            if modo == "humano":
-                pausa = round(random.uniform(3.0, 6.0), 2)
-                print(f"  ⏳ Pausa humanizada: {pausa}s...")
-                time.sleep(pausa)
-            else:
-                print(f"  Aguardando {segundos}s antes do próximo envio...")
-                time.sleep(segundos)
+servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
+print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
 
 
-    # TODO (Caio/Yasmin): Fechar a conexão SMTP com servidor_smtp.quit() no final de tudo.
-    print("\n[SUCESSO] Linha de disparo finalizada.")
+
+# ==============================================================================
+# CONTROLE ANTIBLOQUEIO 
+# Objetivo: Fazer o script "respirar" entre envios para evitar punição de Spam.
+# ==============================================================================
+# Usar time.sleep() para criar uma pausa de 3 a 5 segundos.
+# Adicionar um print informando o tempo de espera.
+
+def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
+
+#Injeta uma pausa estratégica entre os envios de e-mail para evitar
+#bloqueio por comportamento de spam.
+
+#Args:
+#modo:     "fixo"    → pausa sempre igual (time.sleep(segundos))
+#"humano"  → pausa aleatória entre 3 e 6s (mais natural)
+#segundos: Duração base da pausa no modo "fixo" (padrão: 3).
+
+
+    if modo == "humano":
+        pausa = round(random.uniform(3.0, 6.0), 2)
+        print(f"  ⏳ Pausa humanizada: {pausa}s...")
+        time.sleep(pausa)
+    else:
+        print(f"  Aguardando {segundos}s antes do próximo envio...")
+        time.sleep(segundos)
+
+
+# TODO (Caio/Yasmin): Fechar a conexão SMTP com servidor_smtp.quit() no final de tudo.
+print("\n[SUCESSO] Linha de disparo finalizada.")
