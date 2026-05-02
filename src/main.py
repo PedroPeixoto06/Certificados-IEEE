@@ -102,9 +102,9 @@ def iniciar_geracao():
 
         print("\n[TRANSIÇÃO] Iniciando o envio de e-mails para os alunos...")
     
-        # variável "participantes" já é uma lista de dicionários!
-        # variável "pasta_saida" já tem o caminho dos PDFs!
-        disparar_email(participantes, pasta_saida)
+    # variável "participantes" já é uma lista de dicionários!
+    # variável "pasta_saida" já tem o caminho dos PDFs!
+    disparar_email(participantes, pasta_saida)
         
 if __name__ == "__main__":
     iniciar_geracao()

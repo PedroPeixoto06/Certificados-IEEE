@@ -115,15 +115,22 @@ def disparar_email(lista_alunos, pasta_certificados):
             # DEMANDA 3: ANEXAÇÃO DINÂMICA
             # ==============================================================================
             
+
+            # 1. Aplica a MESMA regra do exportador para achar o arquivo:
+            nome_sanitizado = nome_aluno.strip().replace(" ", "_")
+            nome_ficheiro = f"Certificado_{nome_sanitizado}.pdf"
+
             #Anexa o PDF
-            caminho_pdf = f"{pasta_certificados}/{nome_aluno}.pdf"
+            caminho_pdf = os.path.join(pasta_certificados, nome_ficheiro)
+            
             with open(caminho_pdf, "rb") as arquivo:
                 parte = MIMEBase("application", "octet-stream")
                 parte.set_payload(arquivo.read())
+            
             encoders.encode_base64(parte)
             parte.add_header(
                 "Content-Disposition",
-                f'attachment; filename="{nome_aluno}.pdf"'
+                f'attachment; filename="{nome_ficheiro}"'
             )
             msg.attach(parte)
             
