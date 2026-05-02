@@ -5,6 +5,7 @@ import time
 from leitor_csv import carregar_dados_cvs
 from motor_imagem import desenhar_nome_centralizado, carregar_assets
 from exportador import exportar_certificado
+from envio_email import disparar_email
 
 # Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
@@ -98,5 +99,12 @@ def iniciar_geracao():
         print(f"[SUCESSO] CONCLUIDO EM {duracao} segundos")
         print(f"[DIRETORIO] CERTIFICADOS EM: {pasta_saida}")
         print("=" * 50)
+
+        print("\n[TRANSIÇÃO] Iniciando o envio de e-mails para os alunos...")
+    
+        # variável "participantes" já é uma lista de dicionários!
+        # variável "pasta_saida" já tem o caminho dos PDFs!
+        disparar_email(participantes, pasta_saida)
+        
 if __name__ == "__main__":
     iniciar_geracao()
