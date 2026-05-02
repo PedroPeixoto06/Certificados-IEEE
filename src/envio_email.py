@@ -105,14 +105,24 @@ def criar_pacote_email(nome_aluno, email_destino):
     return msg
 
 
-# ==============================================================================
-# DEMANDA 3: ANEXAÇÃO DINÂMICA
-# Objetivo: Encontrar o PDF do aluno em modo binário e anexar ao envelope.
-# ==============================================================================
-#  Montar o caminho exato do arquivo PDF.
-#  Abrir o PDF em modo 'rb' (leitura binária).
-#  Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
-#  Fechar o arquivo PDF da memória.
+        # ==============================================================================
+        # DEMANDA 3: ANEXAÇÃO DINÂMICA
+        # Objetivo: Encontrar o PDF do aluno em modo binário e anexar ao envelope.
+        # ==============================================================================
+        caminho_pdf = f"{pasta_certificados}/{nome_aluno}.pdf"
+        with open(caminho_pdf, "rb") as arquivo:
+            parte = MIMEBase("application", "octet-stream")
+            parte.set_payload(arquivo.read())
+        encoders.encode_base64(parte)
+        parte.add_header(
+            "Content-Disposition",
+            f'attachment; filename="{nome_aluno}.pdf"'
+        )
+        msg.attach(parte)
+        # TODO: Montar o caminho exato do arquivo PDF.
+        # TODO: Abrir o PDF em modo 'rb' (leitura binária).
+        # TODO: Usar MIMEBase, aplicar payload, encodar em Base64 e anexar à 'msg'.
+        # TODO: Fechar o arquivo PDF da memória.
 
 
 # --- DISPARO EFETIVO ---
