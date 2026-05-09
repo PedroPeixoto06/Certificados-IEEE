@@ -6,6 +6,7 @@ from leitor_csv import carregar_dados_cvs
 from motor_imagem import desenhar_nome_centralizado, carregar_assets
 from exportador import exportar_certificado
 from envio_email import disparar_email
+from validador import validar_insumos
 
 # Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
 DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,22 @@ def iniciar_geracao():
 
     if not config:
         print("[FALHA] Encerrando execução por falta de insumos.")
+        return
+    
+    # ==============================================================================
+    # Fase 4 (Caio): Validação de Insumos e Pré-requisitos
+    # ==============================================================================
+
+    sucesso, mensagem = validar_insumos(config, DIRETORIO_RAIZ)
+
+    if not sucesso:
+        print(f"\n[ERRO] {mensagem}")
+        print("[FALHA] Encerrando execução devido a falhas de validação.")
+        return # Termina a execução aqui mesmo, antes de tentar ler imagem ou CSV!
+    
+    else:
+        print(mensagem)
+
 
     # Extraindo as variáveis para facilitar o uso da equipe na Fase 2
     infos = config['configuracoes_certificado']
