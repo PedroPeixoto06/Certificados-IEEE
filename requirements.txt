@@ -1,4 +1,0 @@
-pandas
-Pillow
-openpyxl
-python-dotenv
