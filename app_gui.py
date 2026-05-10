@@ -233,11 +233,12 @@ class App(ctk.CTk):
 
         # barra de progresso (oculta por padrão)
         self._progresso = ctk.CTkProgressBar(
-            corpo, mode="indeterminate",
+            corpo, mode="determinate",
             height=6, corner_radius=3,
             fg_color=COR_BORDA,
             progress_color=COR_IEEE_CLARO,
         )
+        self._progresso.set(0)
 
         # ── área de log ──
         ctk.CTkLabel(corpo, text="📋  Log de execução",
@@ -290,63 +291,26 @@ class App(ctk.CTk):
             daemon=True,
         )
         t.start()
+    
+    def atualizar_barra_externa(self, atual, total):
+        porcentagem = atual / total
+        self.after(0, lambda: self._progresso.set(porcentagem))
+        self.after(0, lambda: self._log.append(f"[STATUS] Processando: {atual}/{total}", "INFO"))
 
     def _executar_geracao(self, planilha: str, template: str):
-        """Roda na thread de background."""
         try:
-            # Redireciona prints do main.py para o log da UI
-            import io, contextlib
-
-            buffer = io.StringIO()
-
-            # Importa e chama iniciar_geracao injetando os caminhos via config temporário
-            self._log.append(f"[INFO] Planilha : {planilha}", "INFO")
-            self._log.append(f"[INFO] Template : {template}", "INFO")
-
-            # ── Tenta importar o módulo principal do projeto ──
-            try:
-                # Captura stdout do módulo original
-                f = io.StringIO()
-                with contextlib.redirect_stdout(f):
-                    from main import iniciar_geracao
-                    iniciar_geracao()
-                saida = f.getvalue()
-                for linha in saida.splitlines():
-                    if "[ERRO]" in linha or "[FALHA]" in linha:
-                        self._log.append(linha, "ERRO")
-                    elif "[SUCESSO]" in linha:
-                        self._log.append(linha, "SUCESSO")
-                    elif "[INFO]" in linha or "[STATUS]" in linha or "[ASSETS]" in linha:
-                        self._log.append(linha, "INFO")
-                    elif "[AVISO]" in linha:
-                        self._log.append(linha, "AVISO")
-                    else:
-                        self._log.append(linha, "NORMAL")
-                self._finalizar(sucesso=True)
-
-            except ImportError:
-                # Modo demonstração quando executado fora do projeto
-                import time
-                etapas = [
-                    ("[INFO] Lendo planilha de participantes...", "INFO", 0.6),
-                    ("[INFO] Carregando template de imagem...", "INFO", 0.8),
-                    ("[STATUS] Processando certificados...", "INFO", 0.5),
-                    ("[INFO] Certificado 1/3 — Ana Paula Souza ✓", "SUCESSO", 0.4),
-                    ("[INFO] Certificado 2/3 — Bruno Oliveira ✓", "SUCESSO", 0.4),
-                    ("[INFO] Certificado 3/3 — Carla Mendes ✓", "SUCESSO", 0.4),
-                    ("[INFO] Enviando e-mails...", "INFO", 1.0),
-                    ("[SUCESSO] Concluído com sucesso!", "SUCESSO", 0),
-                ]
-                for msg, tipo, delay in etapas:
-                    self._log.append(msg, tipo)
-                    if delay:
-                        time.sleep(delay)
-                self._finalizar(sucesso=True)
-
+            from main import iniciar_geracao
+            
+            iniciar_geracao(callback_progresso=self.atualizar_barra_externa)
+            
+            self._finalizar(sucesso=True)
+            messagebox.showinfo("Sucesso", "Certificados gerados e e-mails enviados!")
         except Exception as e:
             self._log.append(f"[ERRO] {e}", "ERRO")
             self._finalizar(sucesso=False)
+            messagebox.showerror("Erro", str(e))
 
+            
     def _finalizar(self, sucesso: bool):
         """Restaura UI após conclusão (chamado da thread de background)."""
         self.after(0, self._restaurar_ui, sucesso)
