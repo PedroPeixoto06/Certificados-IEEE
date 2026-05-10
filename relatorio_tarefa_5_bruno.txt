@@ -1,0 +1,73 @@
+================================================================================
+RELATÓRIO DE ATIVIDADES - FASE 4 (TAREFA 5: EMPACOTAMENTO E EXECUTÁVEL)
+Responsável: Bruno
+================================================================================
+
+Este documento registra as alterações e criações feitas no projeto para 
+transformar a ferramenta do IEEE em um único arquivo executável (.exe), 
+eliminando a necessidade de instalar Python e gerenciar dependências.
+
+1. ARQUIVOS CRIADOS
+--------------------------------------------------------------------------------
+> gerar_executavel.bat
+  - O que é: Script de automação em lote (Batch).
+  - Motivo: Facilita a compilação do projeto com apenas dois cliques. Ele 
+    instala as dependências (via requirements.txt) e executa o PyInstaller.
+  - Ajustes importantes no script: Foi configurado para usar "python -m PyInstaller"
+    (evitando erros de PATH do Windows), incluiu as pastas ("src", "assets", 
+    "data") e forçou o empacotamento do motor via --hidden-import "main", 
+    garantindo que o executável não ficasse apenas no "Modo Demonstração".
+
+2. ARQUIVOS ATUALIZADOS
+--------------------------------------------------------------------------------
+> app_gui.py
+  - O que mudou: Alterada a lógica de definição da variável DIRETORIO_ATUAL.
+  - Motivo: O PyInstaller extrai os arquivos temporariamente para uma pasta 
+    chamada "sys._MEIPASS" durante a execução. O código precisava de uma 
+    verificação "getattr(sys, 'frozen', False)" para saber se estava rodando 
+    como .exe ou como script. Com isso, os caminhos das fontes e da imagem
+    (logo_IEEE) passaram a apontar corretamente para a pasta temporária onde o 
+    código é extraído, impedindo falhas de inicialização do executável.
+
+> src/main.py
+  - O que mudou: Ajustes nas variáveis DIRETORIO_RAIZ, DIRETORIO_ATUAL e pasta_saida.
+  - Motivo: Se não ajustássemos esse arquivo, o motor gerador de PDF iria 
+    salvar os certificados dentro da pasta temporária invisível do PyInstaller 
+    e deletá-los assim que o programa fosse fechado. As variáveis foram 
+    atualizadas para usar o "sys.executable", fazendo com que a pasta final de 
+    exportação ("certificados_prontos") seja sempre criada exatamente no mesmo 
+    local onde o usuário executou o arquivo app_gui.exe.
+
+3. PASTAS E ARQUIVOS GERADOS AUTOMATICAMENTE (Pelo PyInstaller)
+--------------------------------------------------------------------------------
+> Pasta "dist"
+  - O que é: Pasta de distribuição.
+  - Motivo: É aqui que o PyInstaller cospe o produto finalizado. O arquivo 
+    "app_gui.exe" pronto e empacotado sempre ficará dentro desta pasta. É ela 
+    que você deve entregar para os outros membros da equipe.
+
+> Pasta "build"
+  - O que é: Pasta de trabalho temporária.
+  - Motivo: O PyInstaller usa esta pasta para despejar os logs, separar os 
+    arquivos binários e construir as dependências antes de gerar o executável 
+    final. Pode ser apagada após a compilação sem problemas.
+
+> Arquivo "app_gui.spec"
+  - O que é: O arquivo de especificação do PyInstaller.
+  - Motivo: Contém as "regras" que o PyInstaller usou na última compilação.
+    Se no futuro precisarem adicionar novas pastas ou dependências pesadas,
+    podem editar este arquivo diretamente.
+
+4. NOTAS DE SEGURANÇA E EXECUÇÃO (Dica Importante)
+--------------------------------------------------------------------------------
+> Controle Inteligente de Aplicativos (Windows Smart App Control)
+  - Problema: O Windows costuma bloquear automaticamente arquivos .exe recém-
+    criados que não possuem uma "assinatura digital" paga (o que é o caso deste 
+    projeto interno).
+  - Solução Adotada: Foi necessário acessar as configurações do Windows e 
+    desativar a opção "Controle Inteligente de Aplicativos" (ou clicar em 
+    "Mais informações" > "Executar assim mesmo" no SmartScreen) para que o 
+    computador permitisse a execução livre do nosso Gerador de Certificados.
+
+--------------------------------------------------------------------------------
+Fim do Registro.
