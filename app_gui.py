@@ -298,17 +298,48 @@ class App(ctk.CTk):
         self.after(0, lambda: self._log.append(f"[STATUS] Processando: {atual}/{total}", "INFO"))
 
     def _executar_geracao(self, planilha: str, template: str):
+        """Roda na thread de background e captura os prints do motor."""
+        import io
+        import contextlib
+        
         try:
-            from main import iniciar_geracao
+            # 1. Prepara o "sequestro" do terminal
+            f = io.StringIO()
             
-            iniciar_geracao(callback_progresso=self.atualizar_barra_externa)
+            with contextlib.redirect_stdout(f):
+                from main import iniciar_geracao
+                
+                # 2. Chama o motor passando o rádio comunicador da barra de progresso
+                iniciar_geracao(callback_progresso=self.atualizar_barra_externa)
+                
+            # 3. Terminou? Agora lê tudo o que o motor tentou imprimir
+            saida = f.getvalue()
             
+            # 4. Injeta linha por linha no LogBox com as cores institucionais
+            for linha in saida.splitlines():
+                if not linha.strip():
+                    continue # Ignora quebras de linha vazias para manter o log limpo
+                    
+                if "[ERRO]" in linha or "[FALHA]" in linha:
+                    self._log.append(linha, "ERRO")
+                elif "[SUCESSO]" in linha:
+                    self._log.append(linha, "SUCESSO")
+                elif "[INFO]" in linha or "[STATUS]" in linha or "[ASSETS]" in linha or "[TRANSIÇÃO]" in linha or "[DADOS]" in linha:
+                    self._log.append(linha, "INFO")
+                elif "[AVISO]" in linha:
+                    self._log.append(linha, "AVISO")
+                else:
+                    self._log.append(linha, "NORMAL")
+                    
             self._finalizar(sucesso=True)
-            messagebox.showinfo("Sucesso", "Certificados gerados e e-mails enviados!")
+            
+            # 5. Chama o pop-up com segurança (Thread-Safe)
+            self.after(0, lambda: messagebox.showinfo("Sucesso", "Certificados gerados e e-mails enviados!"))
+            
         except Exception as e:
-            self._log.append(f"[ERRO] {e}", "ERRO")
+            self._log.append(f"[ERRO CRÍTICO] {e}", "ERRO")
             self._finalizar(sucesso=False)
-            messagebox.showerror("Erro", str(e))
+            self.after(0, lambda err=str(e): messagebox.showerror("Erro", err))
 
             
     def _finalizar(self, sucesso: bool):
