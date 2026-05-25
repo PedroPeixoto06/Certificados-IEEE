@@ -5,7 +5,7 @@ a = Analysis(
     ['app_gui.py'],
     pathex=['src'],
     binaries=[],
-    datas=[('src', 'src'), ('assets', 'assets'), ('data', 'data'), ('config.json', '.')],
+    datas=[('src', 'src'), ('assets', 'assets'), ('data', 'data'), ('config.json', '.'), ('logo_IEEE.png', '.'],
     hiddenimports=['main'],
     hookspath=[],
     hooksconfig={},
