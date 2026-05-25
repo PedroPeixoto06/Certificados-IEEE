@@ -8,9 +8,16 @@ from exportador import exportar_certificado
 from envio_email import disparar_email
 from validador import validar_insumos
 
+import sys
 # Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
-DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
-DIRETORIO_RAIZ = os.path.dirname(DIRETORIO_ATUAL)
+if getattr(sys, 'frozen', False):
+    DIRETORIO_ATUAL = os.path.join(sys._MEIPASS, "src")
+    DIRETORIO_RAIZ = sys._MEIPASS
+    DIRETORIO_EXECUTAVEL = os.path.dirname(sys.executable)
+else:
+    DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
+    DIRETORIO_RAIZ = os.path.dirname(DIRETORIO_ATUAL)
+    DIRETORIO_EXECUTAVEL = DIRETORIO_RAIZ
 
 def configuracoes(caminho_arquivo="config.json"):
     """
@@ -55,7 +62,11 @@ def iniciar_geracao(callback_progresso=None):
     fonte_path = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['fonte_nome'])
     planilha = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['planilha_dados'])
     tam_fonte = infos['fonte']['tamanho']
-    pasta_saida = os.path.join(DIRETORIO_RAIZ, infos['arquivos'].get('pasta_saida', 'certificados_prontos'))
+
+    
+    nome_da_pasta = infos['arquivos'].get('pasta_saida', 'certificados_prontos')
+    pasta_saida = os.path.join(DIRETORIO_EXECUTAVEL, nome_da_pasta)
+
     pos_y = infos['posicao_nome']['y']
 
     participantes = carregar_dados_cvs(planilha)

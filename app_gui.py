@@ -7,7 +7,14 @@ import os
 import sys
 
 # ── Adiciona a pasta src/ ao path para importar os módulos do projeto ──
-DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    DIRETORIO_ATUAL = sys._MEIPASS
+    # O diretório onde o .exe está rodando (útil se for salvar arquivos)
+    DIRETORIO_EXECUTAVEL = os.path.dirname(sys.executable)
+else:
+    DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
+    DIRETORIO_EXECUTAVEL = DIRETORIO_ATUAL
+
 SRC_PATH = os.path.join(DIRETORIO_ATUAL, "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
