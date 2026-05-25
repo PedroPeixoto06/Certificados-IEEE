@@ -315,9 +315,15 @@ class App(ctk.CTk):
             
             with contextlib.redirect_stdout(f):
                 from main import iniciar_geracao
+                from config_manager import bind_salvar_e_gerar
                 
-                # 2. Chama o motor passando o rádio comunicador da barra de progresso
-                iniciar_geracao(callback_progresso=self.atualizar_barra_externa)
+                # 2. Envia os caminhos da tela para o JSON e depois aciona o motor
+                bind_salvar_e_gerar(
+                    caminho_planilha=planilha,
+                    caminho_template=template,
+                    iniciar_geracao=iniciar_geracao,
+                    callback_progresso=self.atualizar_barra_externa
+                )
                 
             # 3. Terminou? Agora lê tudo o que o motor tentou imprimir
             saida = f.getvalue()
