@@ -7,8 +7,8 @@ echo Instalando dependencias...
 python -m pip install -r requirements.txt
 python -m pip install pyinstaller customtkinter
 echo.
-echo Compilando o executavel (isso pode levar alguns minutos)...
-python -m PyInstaller --noconfirm --onefile --windowed --paths "src" --hidden-import "main" --add-data "src;src" --add-data "assets;assets" --add-data "data;data" --add-data "config.json;." app_gui.py
+echo Compilando o executavel lendo as regras do app_gui.spec...
+python -m PyInstaller --noconfirm app_gui.spec
 echo.
 if exist "dist\app_gui.exe" (
     echo ========================================================
