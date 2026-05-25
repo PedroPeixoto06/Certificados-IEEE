@@ -81,28 +81,34 @@ def bind_salvar_e_gerar(
     caminho_planilha: str,
     caminho_template: str,
     iniciar_geracao: Callable,
-    callback_progresso: Callable[[int, str], None] | None = None
+    callback_progresso: Callable[[int, int], None] | None = None
 ) -> None:
     """
-    Bind do botão principal 'Gerar Certificados'.
-
-    1. Persiste todas as escolhas da UI no config.json.
-    2. Aciona a função iniciar_geracao() do motor.
-
-    Args:
-        caminho_planilha:    Caminho capturado do campo da UI.
-        caminho_template:    Caminho capturado do campo da UI.
-        iniciar_geracao:     Função do motor (main.py) a ser acionada.
-        callback_progresso:  Função opcional da UI para atualizar
-                             barra/contador de progresso (Tarefa 4 do Pedro).
+    1. Lê o config.json atual.
+    2. Atualiza APENAS os caminhos dentro da estrutura aninhada que o motor exige.
+    3. Aciona a função iniciar_geracao().
     """
-    # 1. Persiste as escolhas no config.json
-    salvar_config({
-        "caminho_planilha": caminho_planilha,
-        "caminho_template": caminho_template,
-    })
+    config_atual = carregar_config()
+    
+    # Navega até o dicionário interno para não quebrar a estrutura da main.py
+    if "configuracoes_certificado" not in config_atual:
+        config_atual["configuracoes_certificado"] = {"arquivos": {}}
+        
+    # Atualiza apenas os arquivos selecionados pela interface
+    config_atual["configuracoes_certificado"]["arquivos"]["planilha_dados"] = caminho_planilha
+    config_atual["configuracoes_certificado"]["arquivos"]["imagem_base"] = caminho_template
 
-    # 2. Dispara o motor, injetando o callback de progresso se existir
+    # Salva o arquivo preservando o resto (como as fontes e posições)
+    with open(CAMINHO_CONFIG, "w", encoding="utf-8") as f:
+        json.dump(config_atual, f, ensure_ascii=False, indent=4)
+
+    print(f"[CONFIG] Arquivos de lote atualizados com sucesso no JSON.")
+
+    # Dispara o motor, injetando o callback de progresso se existir
+    if callback_progresso:
+        iniciar_geracao(callback_progresso=callback_progresso)
+    else:
+        iniciar_geracao()
     if callback_progresso:
         iniciar_geracao(callback_progresso=callback_progresso)
     else:
