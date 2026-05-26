@@ -24,7 +24,6 @@ def configuracoes(caminho_arquivo="config.json"):
     Lê o arquivo JSON e retorna um dicionário com os parâmetros de configuração.
     Isso blinda o código contra valores hardcoded.
     """
-
     caminho_arquivo = os.path.join(DIRETORIO_RAIZ, "config.json")
 
     if not os.path.exists(caminho_arquivo):
@@ -41,7 +40,7 @@ def configuracoes(caminho_arquivo="config.json"):
         return None
     
 
-def iniciar_geracao(callback_progresso=None):
+def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remetente=None):
     """
     Função principal que vai orquestrar as chamadas do sistema.
     """
@@ -63,7 +62,6 @@ def iniciar_geracao(callback_progresso=None):
     planilha = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['planilha_dados'])
     tam_fonte = infos['fonte']['tamanho']
 
-    
     nome_da_pasta = infos['arquivos'].get('pasta_saida', 'certificados_prontos')
     pasta_saida = os.path.join(DIRETORIO_EXECUTAVEL, nome_da_pasta)
 
@@ -75,7 +73,6 @@ def iniciar_geracao(callback_progresso=None):
     total = len(participantes)
     print(f"\n[STATUS] Processando {total} certificados...")
 
-    # AQUI ESTÁ A MUDANÇA NO LOOP:
     for i, aluno in enumerate(participantes, 1):
         nome = aluno['nome']
         copia_imagem = imagem_base.copy()
@@ -89,8 +86,12 @@ def iniciar_geracao(callback_progresso=None):
 
     print(f"\n[SUCESSO] Processo de geração concluído.")
     
-    # Envio de e-mails
-    disparar_email(participantes, pasta_saida)
+    # ── Envio de e-mails com credenciais dinâmicas e seguras em memória ──
+    if email_remetente and senha_remetente:
+        print("[STATUS] Iniciando disparo de e-mails em lote...")
+        disparar_email(participantes, pasta_saida, email_remetente, senha_remetente)
+    else:
+        print("[AVISO] Credenciais não fornecidas. Os e-mails não serão enviados.")
         
 if __name__ == "__main__":
     iniciar_geracao()

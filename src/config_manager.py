@@ -81,35 +81,33 @@ def bind_salvar_e_gerar(
     caminho_planilha: str,
     caminho_template: str,
     iniciar_geracao: Callable,
-    callback_progresso: Callable[[int, int], None] | None = None
+    posicao_y: int = 500, # <--- Recebe a coordenada
+    callback_progresso: Callable[[int, int], None] | None = None,
+    email_remetente: str = "",
+    senha_remetente: str = ""
 ) -> None:
-    """
-    1. Lê o config.json atual.
-    2. Atualiza APENAS os caminhos dentro da estrutura aninhada que o motor exige.
-    3. Aciona a função iniciar_geracao().
-    """
+    
     config_atual = carregar_config()
     
-    # Navega até o dicionário interno para não quebrar a estrutura da main.py
     if "configuracoes_certificado" not in config_atual:
-        config_atual["configuracoes_certificado"] = {"arquivos": {}}
+        config_atual["configuracoes_certificado"] = {"arquivos": {}, "posicao_nome": {}}
         
-    # Atualiza apenas os arquivos selecionados pela interface
     config_atual["configuracoes_certificado"]["arquivos"]["planilha_dados"] = caminho_planilha
     config_atual["configuracoes_certificado"]["arquivos"]["imagem_base"] = caminho_template
+    
+    # Atualiza a posição Y na estrutura correta do JSON
+    if "posicao_nome" not in config_atual["configuracoes_certificado"]:
+        config_atual["configuracoes_certificado"]["posicao_nome"] = {}
+    config_atual["configuracoes_certificado"]["posicao_nome"]["y"] = posicao_y
 
-    # Salva o arquivo preservando o resto (como as fontes e posições)
     with open(CAMINHO_CONFIG, "w", encoding="utf-8") as f:
         json.dump(config_atual, f, ensure_ascii=False, indent=4)
 
-    print(f"[CONFIG] Arquivos de lote atualizados com sucesso no JSON.")
+    print(f"[CONFIG] Arquivos de lote atualizados no JSON de configuração.")
 
-    # Dispara o motor, injetando o callback de progresso se existir
-    if callback_progresso:
-        iniciar_geracao(callback_progresso=callback_progresso)
-    else:
-        iniciar_geracao()
-    if callback_progresso:
-        iniciar_geracao(callback_progresso=callback_progresso)
-    else:
-        iniciar_geracao()
+    # Dispara o motor injetando as credenciais seguras e o callback de progresso
+    iniciar_geracao(
+        callback_progresso=callback_progresso,
+        email_remetente=email_remetente,
+        senha_remetente=senha_remetente
+    )

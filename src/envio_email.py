@@ -5,30 +5,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-import dotenv
-from dotenv import load_dotenv
 import random
 
-
-# ==============================================================================
-# CARREGAMENTO DE AMBIENTE
-# ==============================================================================
-
-
-load_dotenv()
-
-EMAIL_REMETENTE  = os.getenv("email_user")
-SENHA_REMETENTE  = os.getenv("senha_user")
-
+# Nota: Removemos o load_dotenv() daqui porque agora as credenciais 
+# vêm direto da memória da interface gráfica por segurança!
 
 # ==============================================================================
 # FUNCOES DE APOIO
 # ==============================================================================
 
 def criar_pacote_email(nome_aluno, email_destino, email_remetente):
-
     """Demanda 2: Cria o envelope e o corpo HTML do e-mail."""
-
     msg = MIMEMultipart()
     
     msg['From'] = email_remetente
@@ -64,9 +51,7 @@ def criar_pacote_email(nome_aluno, email_destino, email_remetente):
 
 
 def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
-
     """Demanda 4: Freio antibloqueio para evitar punição de Spam."""
-
     if modo == "humano":
         pausa = round(random.uniform(3.0, 6.0), 2)
         print(f"  ⏳ Pausa humanizada: {pausa}s...")
@@ -80,47 +65,42 @@ def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
 # MOTOR PRINCIPAL
 # ==============================================================================
 
-
-def disparar_email(lista_alunos, pasta_certificados):
+# 🚨 AJUSTE AQUI: Agora a função recebe os 4 argumentos necessários!
+def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_remetente):
     print("="*50)
     print("[INÍCIO] INICIANDO MOTOR DE ENVIO DE EMAILS")
     print("="*50)
 
-    # 1. Abre a conexão segura SMTP
-    servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587) #abre uma conexão TCP com o servidor smtp.gmail.com na porta 587
+    # 1. Abre a conexão segura SMTP usando as credenciais recebidas em memória
+    servidor_smtp = smtplib.SMTP("smtp.gmail.com", 587)
     servidor_smtp.ehlo()
     servidor_smtp.starttls() 
     servidor_smtp.ehlo()
-    servidor_smtp.login(EMAIL_REMETENTE, SENHA_REMETENTE)
+    servidor_smtp.login(email_remetente, senha_remetente)
 
     # Loop principal de envio para cada aluno da planilha
     for aluno in lista_alunos:
         nome_aluno = aluno['nome']
         email_aluno = aluno['email']
 
-
         # ==============================================================================
         # RESILIÊNCIA E LOGS
         # ==============================================================================
-        
-
         try:
             print(f"[PROCESSANDO] Montando certificado para {nome_aluno} ({email_aluno})")
 
-            # Demanda 2: Puxa o pacote criado pelo Pedro
-            msg = criar_pacote_email(nome_aluno, email_aluno, EMAIL_REMETENTE)
-            
+            # Passa o email dinâmico do remetente para montar o envelope corretamente
+            msg = criar_pacote_email(nome_aluno, email_aluno, email_remetente)
             
             # ==============================================================================
             # DEMANDA 3: ANEXAÇÃO DINÂMICA
             # ==============================================================================
             
-
             # 1. Aplica a MESMA regra do exportador para achar o arquivo:
             nome_sanitizado = nome_aluno.strip().replace(" ", "_")
             nome_ficheiro = f"Certificado_{nome_sanitizado}.pdf"
 
-            #Anexa o PDF
+            # Anexa o PDF
             caminho_pdf = os.path.join(pasta_certificados, nome_ficheiro)
             
             with open(caminho_pdf, "rb") as arquivo:
@@ -134,20 +114,21 @@ def disparar_email(lista_alunos, pasta_certificados):
             )
             msg.attach(parte)
             
-            #Disparo Efetivo
-            servidor_smtp.send_message(msg) #checar o nome postumo do objeto 'msg'
+            # Disparo Efetivo
+            servidor_smtp.send_message(msg)
             print(f"[ENVIADO] E-mail entregue com sucesso para {email_aluno}")
 
-            #Pausa entre envios para evitar bloqueio
+            # Pausa entre envios para evitar bloqueio
             aguardar_entre_envios(modo="humano")
 
         except Exception as e:
-                # Captura o erro para que o programa não seja interrompido
-                with open('erros_envio.txt', 'a', encoding='utf-8') as f_erro:
-                    f_erro.write(f"Falha ao enviar para {nome_aluno} ({email_aluno}) | Erro: {str(e)}\n")
-                
-                print(f"[ERRO] Falha no envio para {nome_aluno}. Erro registrado em erros_envio.txt. Pulando para o próximo...")
-                continue
-    #Finaliza a conexão após terminar todos os alunos
+            # Captura o erro para que o programa não seja interrompido
+            with open('erros_envio.txt', 'a', encoding='utf-8') as f_erro:
+                f_erro.write(f"Falha ao enviar para {nome_aluno} ({email_aluno}) | Erro: {str(e)}\n")
+            
+            print(f"[ERRO] Falha no envio para {nome_aluno}. Erro registrado em erros_envio.txt. Pulando para o próximo...")
+            continue
+
+    # Finaliza a conexão após terminar todos os alunos
     servidor_smtp.quit()
     print("\n[SUCESSO] Linha de disparo finalizada.")

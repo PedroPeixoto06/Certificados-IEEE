@@ -8,20 +8,18 @@ def carregar_assets(caminho_imagem, caminho_fonte, tamanho_fonte=60):
     return imagem_base, fonte
 
 def desenhar_nome_centralizado(imagem_copia, nome, fonte, altura_y_fixa):
-    """Pega numa cópia limpa da imagem e desenha o nome ao centro."""
+    """Pega numa cópia limpa da imagem e desenha o nome perfeitamente ao centro."""
     # 1. Cria a caneta EXCLUSIVA para esta cópia
     draw = ImageDraw.Draw(imagem_copia)
     
-    # 2. Descobre a largura total da imagem automaticamente
+    # 2. Descobre o centro horizontal exato da imagem automaticamente
     largura_imagem = imagem_copia.width
+    eixo_x_centro = largura_imagem / 2
     
-    # 3. Calcula o Bounding Box e a centralização (Matemática do Bruno)
-    bbox = draw.textbbox((0, 0), nome, font=fonte)
-    largura_texto = bbox[2] - bbox[0]
-    eixo_x_dinamico = (largura_imagem - largura_texto) / 2
-    
-    # 4. Desenha o texto na posição calculada
-    draw.text((eixo_x_dinamico, altura_y_fixa), nome, font=fonte, fill="black")
+    # 3. Desenha o texto usando ancoragem matemática do Pillow
+    # 'm' (Middle): Centraliza o texto horizontalmente a partir do eixo_x_centro
+    # 's' (Baseline): Apoia a base das letras exatamente em cima da altura_y_fixa
+    draw.text((eixo_x_centro, altura_y_fixa), nome, font=fonte, fill="black", anchor="ms")
     
     # Devolve a imagem pronta para ser exportada
     return imagem_copia

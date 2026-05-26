@@ -161,11 +161,43 @@ class App(ctk.CTk):
         logo_frame.pack(expand=True)
 
         # ── Logo IEEE a partir do arquivo ──
+        # ── Logo IEEE a partir do arquivo (COM AGRESSOR DE BRANCO) ──
         logo_path = os.path.join(DIRETORIO_ATUAL, "logo_IEEE.png")
         if os.path.exists(logo_path):
             pil_logo = Image.open(logo_path)
-            ctk_logo = ctk.CTkImage(light_image=pil_logo, dark_image=pil_logo, size=(60, 60))
-            ctk.CTkLabel(logo_frame, image=ctk_logo, text="").pack(side="left", padx=(0, 12))
+            
+            # 1. Garante que o PIL leia o canal de transparência (RGBA)
+            pil_logo = pil_logo.convert('RGBA')
+            
+            # 🚨 PASSO MÁGICO: Remove o fundo branco sólido da imagem original 🚨
+            # Pegamos os dados de cada pixel da imagem
+            datas = pil_logo.getdata()
+            
+            newData = []
+            # Analisamos pixel por pixel (R, G, B, Alpha)
+            for item in datas:
+                # Se o pixel for muito branco (R, G e B acima de 240 - permitindo leve variação)
+                if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                    # Nós o substituímos por um pixel branco totalmente transparente (Alpha = 0)
+                    newData.append((255, 255, 255, 0))
+                else:
+                    # Senão, mantemos o pixel original
+                    newData.append(item)
+            
+            # Gravamos os novos dados vazados de volta na imagem
+            pil_logo.putdata(newData)
+                
+            # 2. Calcula a largura dinamicamente (para não espremer)
+            altura_fixa = 60
+            largura_orig, altura_orig = pil_logo.size
+            proporcao = largura_orig / altura_orig
+            largura_calc = int(proporcao * altura_fixa)
+            
+            ctk_logo = ctk.CTkImage(light_image=pil_logo, dark_image=pil_logo, size=(largura_calc, altura_fixa))
+            
+            # 🚨 AJUSTE EXTRA: Garante que o background do Label seja transparente 🚨
+            logo_label = ctk.CTkLabel(logo_frame, image=ctk_logo, text="", fg_color="transparent")
+            logo_label.pack(side="left", padx=(0, 12))
         else:
             ctk.CTkLabel(
                 logo_frame,
@@ -225,6 +257,44 @@ class App(ctk.CTk):
         )
         self._sel_template.pack(fill="x", pady=(0, 20))
 
+        # ── Configuração de Posição (Eixo Y) ──
+        pos_frame = ctk.CTkFrame(corpo, fg_color="transparent")
+        pos_frame.pack(fill="x", pady=(0, 20))
+        
+        ctk.CTkLabel(pos_frame, text="↕️  Posição Vertical do Nome (Pixels):", 
+                     font=("Segoe UI", 12, "bold"), text_color=COR_TEXTO).pack(side="left")
+                     
+        self._txt_pos_y = ctk.CTkEntry(pos_frame, width=80, placeholder_text="Ex: 520", 
+                                       fg_color=COR_FUNDO, border_color=COR_BORDA, text_color=COR_TEXTO)
+        self._txt_pos_y.pack(side="left", padx=15)
+        # Valor padrão para não obrigar a digitar sempre
+        self._txt_pos_y.insert(0, "500")
+
+        # ── Seção de Credenciais de E-mail ──
+        ctk.CTkLabel(corpo, text="🔐  Credenciais de Envio (Gmail)",
+                     font=("Segoe UI", 13, "bold"),
+                     text_color=COR_SUBTEXTO).pack(anchor="w", pady=(10, 4))
+
+        cred_frame = ctk.CTkFrame(corpo, fg_color=COR_PAINEL, corner_radius=10,
+                                  border_width=1, border_color=COR_BORDA)
+        cred_frame.pack(fill="x", pady=(0, 20))
+
+        # Campo de E-mail
+        ctk.CTkLabel(cred_frame, text="E-mail corporativo:", font=("Segoe UI", 12, "bold"), 
+                     text_color=COR_TEXTO).grid(row=0, column=0, padx=15, pady=12, sticky="w")
+        self._txt_email = ctk.CTkEntry(cred_frame, placeholder_text="seu.email@ieee.org",
+                                       fg_color=COR_FUNDO, border_color=COR_BORDA, text_color=COR_TEXTO)
+        self._txt_email.grid(row=0, column=1, padx=15, pady=12, sticky="ew")
+
+        # Campo de Senha (com show="*" para ocultar o que é digitado)
+        ctk.CTkLabel(cred_frame, text="Senha de Aplicativo:", font=("Segoe UI", 12, "bold"), 
+                     text_color=COR_TEXTO).grid(row=1, column=0, padx=15, pady=12, sticky="w")
+        self._txt_senha = ctk.CTkEntry(cred_frame, placeholder_text="Senha de 16 dígitos do Google", show="*",
+                                       fg_color=COR_FUNDO, border_color=COR_BORDA, text_color=COR_TEXTO)
+        self._txt_senha.grid(row=1, column=1, padx=15, pady=12, sticky="ew")
+
+        cred_frame.grid_columnconfigure(1, weight=1)
+
         # ── botão principal ──
         self._btn_gerar = ctk.CTkButton(
             corpo,
@@ -274,6 +344,14 @@ class App(ctk.CTk):
     def _iniciar_geracao(self):
         planilha = self._sel_planilha.caminho
         template = self._sel_template.caminho
+        email = self._txt_email.get().strip()
+        senha = self._txt_senha.get().strip()
+        
+        # Pega a posição Y digitada (se der erro, usa 500 como fallback)
+        try:
+            pos_y = int(self._txt_pos_y.get().strip())
+        except ValueError:
+            pos_y = 500
 
         if not planilha:
             messagebox.showwarning("Atenção", "Selecione a planilha de participantes!")
@@ -281,20 +359,29 @@ class App(ctk.CTk):
         if not template:
             messagebox.showwarning("Atenção", "Selecione o template do certificado!")
             return
+        if not email or not senha:
+            messagebox.showwarning("Atenção", "Insira as credenciais de e-mail para envio!")
+            return
+        
+        t = threading.Thread(
+            target=self._executar_geracao,
+            args=(planilha, template, email, senha, pos_y), # <--- Adicione pos_y aqui
+            daemon=True,
+        )
+        t.start()
 
-        # Desabilita botão e inicia progresso
         self._btn_gerar.configure(state="disabled", text="⏳   Processando...")
         self._progresso.pack(fill="x", pady=(0, 4))
         self._progresso.start()
         self._log.limpar()
         self._log.append("═" * 50, "NORMAL")
-        self._log.append("  INICIANDO MOTOR DE CERTIFICADOS IEEE", "INFO")
+        self._log.append("   INICIANDO MOTOR DE CERTIFICADOS IEEE", "INFO")
         self._log.append("═" * 50, "NORMAL")
 
-        # Roda em thread separada para não travar a UI
+        # Passa email e senha como argumentos para a Thread de background
         t = threading.Thread(
             target=self._executar_geracao,
-            args=(planilha, template),
+            args=(planilha, template, email, senha),
             daemon=True,
         )
         t.start()
@@ -304,40 +391,36 @@ class App(ctk.CTk):
         self.after(0, lambda: self._progresso.set(porcentagem))
         self.after(0, lambda: self._log.append(f"[STATUS] Processando: {atual}/{total}", "INFO"))
 
-    def _executar_geracao(self, planilha: str, template: str):
-        """Roda na thread de background e captura os prints do motor."""
+    def _executar_geracao(self, planilha: str, template: str, email: str, senha: str, pos_y: int): # <--- Aqui
         import io
         import contextlib
         
         try:
-            # 1. Prepara o "sequestro" do terminal
             f = io.StringIO()
-            
             with contextlib.redirect_stdout(f):
                 from main import iniciar_geracao
                 from config_manager import bind_salvar_e_gerar
                 
-                # 2. Envia os caminhos da tela para o JSON e depois aciona o motor
                 bind_salvar_e_gerar(
                     caminho_planilha=planilha,
                     caminho_template=template,
+                    posicao_y=pos_y, # <--- Enviando para o JSON!
                     iniciar_geracao=iniciar_geracao,
-                    callback_progresso=self.atualizar_barra_externa
+                    callback_progresso=self.atualizar_barra_externa,
+                    email_remetente=email,
+                    senha_remetente=senha
                 )
                 
-            # 3. Terminou? Agora lê tudo o que o motor tentou imprimir
             saida = f.getvalue()
             
-            # 4. Injeta linha por linha no LogBox com as cores institucionais
             for linha in saida.splitlines():
                 if not linha.strip():
-                    continue # Ignora quebras de linha vazias para manter o log limpo
-                    
+                    continue
                 if "[ERRO]" in linha or "[FALHA]" in linha:
                     self._log.append(linha, "ERRO")
                 elif "[SUCESSO]" in linha:
                     self._log.append(linha, "SUCESSO")
-                elif "[INFO]" in linha or "[STATUS]" in linha or "[ASSETS]" in linha or "[TRANSIÇÃO]" in linha or "[DADOS]" in linha:
+                elif "[INFO]" in linha or "[STATUS]" in linha or "[ASSETS]" in linha:
                     self._log.append(linha, "INFO")
                 elif "[AVISO]" in linha:
                     self._log.append(linha, "AVISO")
@@ -345,8 +428,6 @@ class App(ctk.CTk):
                     self._log.append(linha, "NORMAL")
                     
             self._finalizar(sucesso=True)
-            
-            # 5. Chama o pop-up com segurança (Thread-Safe)
             self.after(0, lambda: messagebox.showinfo("Sucesso", "Certificados gerados e e-mails enviados!"))
             
         except Exception as e:
