@@ -161,7 +161,6 @@ class App(ctk.CTk):
         logo_frame.pack(expand=True)
 
         # ── Logo IEEE a partir do arquivo ──
-        # ── Logo IEEE a partir do arquivo (COM AGRESSOR DE BRANCO) ──
         logo_path = os.path.join(DIRETORIO_ATUAL, "logo_IEEE.png")
         if os.path.exists(logo_path):
             pil_logo = Image.open(logo_path)
@@ -255,11 +254,25 @@ class App(ctk.CTk):
                    ("Todos", "*.*")],
             fg_color=COR_PAINEL,
         )
-        self._sel_template.pack(fill="x", pady=(0, 20))
+        self._sel_template.pack(fill="x", pady=(0, 10))
+
+        # seletor fonte
+        self._sel_fonte = FileSelector(
+            corpo,
+            label="Fonte do Texto",
+            icone="🔤",
+            tipos=[("Arquivos de Fonte", "*.ttf *.otf"),
+                   ("TrueType", "*.ttf"),
+                   ("OpenType", "*.otf"),
+                   ("Todos", "*.*")],
+            fg_color=COR_PAINEL,
+        )
+        self._sel_fonte.pack(fill="x", pady=(0, 20))
 
         # ── Configuração de Posição (Eixo Y) ──
         pos_frame = ctk.CTkFrame(corpo, fg_color="transparent")
         pos_frame.pack(fill="x", pady=(0, 20))
+
         
         ctk.CTkLabel(pos_frame, text="↕️  Posição Vertical do Nome (Pixels):", 
                      font=("Segoe UI", 12, "bold"), text_color=COR_TEXTO).pack(side="left")
@@ -309,6 +322,7 @@ class App(ctk.CTk):
         self._btn_gerar.pack(fill="x", pady=(0, 6))
 
         # barra de progresso (oculta por padrão)
+        # barra de progresso (agora sempre visível)
         self._progresso = ctk.CTkProgressBar(
             corpo, mode="determinate",
             height=6, corner_radius=3,
@@ -316,6 +330,7 @@ class App(ctk.CTk):
             progress_color=COR_IEEE_CLARO,
         )
         self._progresso.set(0)
+        self._progresso.pack(fill="x", pady=(10, 4))
 
         # ── área de log ──
         ctk.CTkLabel(corpo, text="📋  Log de execução",
@@ -344,54 +359,66 @@ class App(ctk.CTk):
     def _iniciar_geracao(self):
         planilha = self._sel_planilha.caminho
         template = self._sel_template.caminho
+        fonte = self._sel_fonte.caminho
         email = self._txt_email.get().strip()
         senha = self._txt_senha.get().strip()
-        
+
         # Pega a posição Y digitada (se der erro, usa 500 como fallback)
         try:
             pos_y = int(self._txt_pos_y.get().strip())
         except ValueError:
             pos_y = 500
 
+        # Travas de segurança
         if not planilha:
             messagebox.showwarning("Atenção", "Selecione a planilha de participantes!")
             return
         if not template:
             messagebox.showwarning("Atenção", "Selecione o template do certificado!")
             return
+        if not fonte:
+            messagebox.showwarning("Atenção", "Selecione o arquivo de fonte (.ttf ou .otf)!")
+            return
         if not email or not senha:
             messagebox.showwarning("Atenção", "Insira as credenciais de e-mail para envio!")
             return
-        
-        t = threading.Thread(
-            target=self._executar_geracao,
-            args=(planilha, template, email, senha, pos_y), # <--- Adicione pos_y aqui
-            daemon=True,
-        )
-        t.start()
 
+        # ── ATIVAÇÃO DA UI E DA BARRA DE PROGRESSO ──
         self._btn_gerar.configure(state="disabled", text="⏳   Processando...")
-        self._progresso.pack(fill="x", pady=(0, 4))
-        self._progresso.start()
+        self._progresso.set(0.0)
+        self._progresso.update_idletasks()
+        self.update()                    
+        
         self._log.limpar()
         self._log.append("═" * 50, "NORMAL")
         self._log.append("   INICIANDO MOTOR DE CERTIFICADOS IEEE", "INFO")
         self._log.append("═" * 50, "NORMAL")
 
-        # Passa email e senha como argumentos para a Thread de background
+        # Dispara o processo em segundo plano
         t = threading.Thread(
             target=self._executar_geracao,
-            args=(planilha, template, email, senha),
+            args=(planilha, template, fonte, email, senha, pos_y),
             daemon=True,
         )
         t.start()
     
     def atualizar_barra_externa(self, atual, total):
-        porcentagem = atual / total
-        self.after(0, lambda: self._progresso.set(porcentagem))
-        self.after(0, lambda: self._log.append(f"[STATUS] Processando: {atual}/{total}", "INFO"))
+        # Proteção contra erro matemático
+        if total <= 0: 
+            total = 1 
+            
+        porcentagem = float(atual) / float(total)
+        
+        # 1. Atualiza o valor (p=porcentagem garante que a memória não se perca)
+        self.after(0, lambda p=porcentagem: self._progresso.set(p))
+        
+        # 2. Força o CustomTkinter a desenhar o bloco na tela imediatamente
+        self.after(0, self._progresso.update_idletasks)
+        
+        # 3. Cria um log visual para vermos exatamente o que o motor está enviando
+        self.after(0, lambda: self._log.append(f"[PROGRESSO] Passo {atual} de {total} ({porcentagem*100:.1f}%)", "INFO"))
 
-    def _executar_geracao(self, planilha: str, template: str, email: str, senha: str, pos_y: int): # <--- Aqui
+    def _executar_geracao(self, planilha: str, template: str, fonte: str, email: str, senha: str, pos_y: int):
         import io
         import contextlib
         
@@ -404,7 +431,8 @@ class App(ctk.CTk):
                 bind_salvar_e_gerar(
                     caminho_planilha=planilha,
                     caminho_template=template,
-                    posicao_y=pos_y, # <--- Enviando para o JSON!
+                    caminho_fonte=fonte,
+                    posicao_y=pos_y,
                     iniciar_geracao=iniciar_geracao,
                     callback_progresso=self.atualizar_barra_externa,
                     email_remetente=email,
@@ -441,8 +469,12 @@ class App(ctk.CTk):
         self.after(0, self._restaurar_ui, sucesso)
 
     def _restaurar_ui(self, sucesso: bool):
-        self._progresso.stop()
-        self._progresso.pack_forget()
+
+        if sucesso:
+            self._progresso.set(1.0) # Crava em 100% visualmente
+        else:
+            self._progresso.set(0.0)
+
         self._btn_gerar.configure(
             state="normal",
             text="🎓   GERAR CERTIFICADOS"

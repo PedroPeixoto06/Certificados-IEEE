@@ -64,9 +64,7 @@ def aguardar_entre_envios(modo: str = "fixo", segundos: int = 3) -> None:
 # ==============================================================================
 # MOTOR PRINCIPAL
 # ==============================================================================
-
-# 🚨 AJUSTE AQUI: Agora a função recebe os 4 argumentos necessários!
-def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_remetente):
+def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_remetente, callback_progresso=None, total_passos=0):
     print("="*50)
     print("[INÍCIO] INICIANDO MOTOR DE ENVIO DE EMAILS")
     print("="*50)
@@ -78,8 +76,10 @@ def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_reme
     servidor_smtp.ehlo()
     servidor_smtp.login(email_remetente, senha_remetente)
 
-    # Loop principal de envio para cada aluno da planilha
-    for aluno in lista_alunos:
+    total_alunos = len(lista_alunos)
+
+    # 🚨 CORREÇÃO AQUI: Adicionado enumerate para contar o índice (i) de cada envio
+    for i, aluno in enumerate(lista_alunos, 1):
         nome_aluno = aluno['nome']
         email_aluno = aluno['email']
 
@@ -95,8 +95,6 @@ def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_reme
             # ==============================================================================
             # DEMANDA 3: ANEXAÇÃO DINÂMICA
             # ==============================================================================
-            
-            # 1. Aplica a MESMA regra do exportador para achar o arquivo:
             nome_sanitizado = nome_aluno.strip().replace(" ", "_")
             nome_ficheiro = f"Certificado_{nome_sanitizado}.pdf"
 
@@ -120,6 +118,11 @@ def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_reme
 
             # Pausa entre envios para evitar bloqueio
             aguardar_entre_envios(modo="humano")
+
+            # 🚨 CORREÇÃO AQUI: Atualiza a barra de progresso após o envio de cada e-mail
+            if callback_progresso:
+                passo_atual = total_alunos + i
+                callback_progresso(passo_atual, total_passos)
 
         except Exception as e:
             # Captura o erro para que o programa não seja interrompido

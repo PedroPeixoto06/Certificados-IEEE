@@ -80,8 +80,9 @@ def bind_template(caminho: str) -> None:
 def bind_salvar_e_gerar(
     caminho_planilha: str,
     caminho_template: str,
+    caminho_fonte: str,
     iniciar_geracao: Callable,
-    posicao_y: int = 500, # <--- Recebe a coordenada
+    posicao_y: int = 500,
     callback_progresso: Callable[[int, int], None] | None = None,
     email_remetente: str = "",
     senha_remetente: str = ""
@@ -94,6 +95,7 @@ def bind_salvar_e_gerar(
         
     config_atual["configuracoes_certificado"]["arquivos"]["planilha_dados"] = caminho_planilha
     config_atual["configuracoes_certificado"]["arquivos"]["imagem_base"] = caminho_template
+    config_atual["configuracoes_certificado"]["arquivos"]["fonte_nome"] = caminho_fonte
     
     # Atualiza a posição Y na estrutura correta do JSON
     if "posicao_nome" not in config_atual["configuracoes_certificado"]:

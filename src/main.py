@@ -70,8 +70,12 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
     participantes = carregar_dados_cvs(planilha)
     imagem_base, fonte = carregar_assets(img_base, fonte_path, tam_fonte)
 
-    total = len(participantes)
-    print(f"\n[STATUS] Processando {total} certificados...")
+    # ── MUDANÇA 1: REDEFINIÇÃO DA MÉTRICA DE PROGRESSO ──
+    total_alunos = len(participantes)
+    # O total de passos agora é o dobro (1 passo para o PDF + 1 passo para o E-mail de cada um)
+    total_passos = total_alunos * 2 
+    
+    print(f"\n[STATUS] Gerando {total_alunos} certificados...")
 
     for i, aluno in enumerate(participantes, 1):
         nome = aluno['nome']
@@ -80,16 +84,17 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
         exportar_certificado(imagem_pronta, nome, pasta_saida)
         copia_imagem.close()
 
-        # Avisa a interface que terminou um
+        # Avisa a interface usando a nova escala (vai preencher de 0% até exatamente 50%)
         if callback_progresso:
-            callback_progresso(i, total)
+            callback_progresso(i, total_passos)
 
-    print(f"\n[SUCESSO] Processo de geração concluído.")
+    print(f"\n[SUCESSO] Processo de geração de PDFs concluído.")
     
-    # ── Envio de e-mails com credenciais dinâmicas e seguras em memória ──
+    # ── MUDANÇA 2: REPASSE DO CALLBACK PARA O MOTOR DE E-MAILS ──
     if email_remetente and senha_remetente:
         print("[STATUS] Iniciando disparo de e-mails em lote...")
-        disparar_email(participantes, pasta_saida, email_remetente, senha_remetente)
+        # Injetamos o callback e o total_passos para o envio_email continuar a contagem
+        disparar_email(participantes, pasta_saida, email_remetente, senha_remetente, callback_progresso, total_passos)
     else:
         print("[AVISO] Credenciais não fornecidas. Os e-mails não serão enviados.")
         
