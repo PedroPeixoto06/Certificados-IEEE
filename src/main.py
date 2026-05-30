@@ -19,19 +19,28 @@ else:
     DIRETORIO_RAIZ = os.path.dirname(DIRETORIO_ATUAL)
     DIRETORIO_EXECUTAVEL = DIRETORIO_RAIZ
 
-def configuracoes(caminho_arquivo="config.json"):
+def configuracoes():
     """
     Lê o arquivo JSON e retorna um dicionário com os parâmetros de configuração.
     Isso blinda o código contra valores hardcoded.
     """
-    caminho_arquivo = os.path.join(DIRETORIO_RAIZ, "config.json")
+    # 1. Procura primeiro o config.json ao lado do .exe (onde a interface salva as suas escolhas)
+    caminho_externo = os.path.join(DIRETORIO_EXECUTAVEL, "config.json")
+    
+    # 2. Se não achar, usa o padrão que veio empacotado dentro da pasta temporária do sistema
+    caminho_interno = os.path.join(DIRETORIO_RAIZ, "config.json")
+
+    if os.path.exists(caminho_externo):
+        caminho_arquivo = caminho_externo
+    else:
+        caminho_arquivo = caminho_interno
 
     if not os.path.exists(caminho_arquivo):
         print(f"Arquivo de configuração '{caminho_arquivo}' não encontrado.")
         return None
     
     try:
-        with open(caminho_arquivo, 'r', encoding = 'utf-8') as arquivo:
+        with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
             config = json.load(arquivo)
             return config
             
@@ -60,7 +69,7 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
     img_base = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['imagem_base'])
     fonte_path = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['fonte_nome'])
     planilha = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['planilha_dados'])
-    tam_fonte = infos['fonte']['tamanho']
+    tam_fonte = infos.get('fonte', {}).get('tamanho', 40)
 
     nome_da_pasta = infos['arquivos'].get('pasta_saida', 'certificados_prontos')
     pasta_saida = os.path.join(DIRETORIO_EXECUTAVEL, nome_da_pasta)
