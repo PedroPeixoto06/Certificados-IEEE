@@ -75,6 +75,9 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
     pos_y = infos['posicao_nome']['y']
 
     participantes = carregar_dados_cvs(planilha)
+    if not participantes:
+        raise RuntimeError("A planilha nao contém participantes validos. Verifique se as colunas 'Nome' e 'Email' existem e estao preenchidas corretamente.")
+        
     imagem_base, fonte = carregar_assets(img_base, fonte_path, tam_fonte)
 
     # ── MUDANÇA 1: REDEFINIÇÃO DA MÉTRICA DE PROGRESSO ──
