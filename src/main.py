@@ -57,13 +57,11 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
 
     config = configuracoes()
     if not config:
-        print("[FALHA] Encerrando execução por falta de insumos.")
-        return
+        raise RuntimeError("Arquivo de configuração não encontrado ou inválido.")
     
     sucesso, mensagem = validar_insumos(config, DIRETORIO_RAIZ)
     if not sucesso:
-        print(f"\n[ERRO] {mensagem}")
-        return
+        raise RuntimeError(mensagem)
 
     infos = config['configuracoes_certificado']
     img_base = os.path.join(DIRETORIO_RAIZ, infos['arquivos']['imagem_base'])
