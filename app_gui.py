@@ -421,6 +421,12 @@ class App(ctk.CTk):
     def _executar_geracao(self, planilha: str, template: str, fonte: str, email: str, senha: str, pos_y: int):
         import io
         import contextlib
+        import sys
+
+        # Limpa o cache para forçar releitura dos arquivos a cada execução
+        for mod in ["main", "config_manager", "leitor_csv",
+                    "motor_imagem", "exportador", "envio_email", "validador"]:
+            sys.modules.pop(mod, None)
         
         try:
             f = io.StringIO()
@@ -462,8 +468,6 @@ class App(ctk.CTk):
             self._log.append(f"[ERRO CRÍTICO] {e}", "ERRO")
             self._finalizar(sucesso=False)
             self.after(0, lambda err=str(e): messagebox.showerror("Erro", err))
-
-            
     def _finalizar(self, sucesso: bool):
         """Restaura UI após conclusão (chamado da thread de background)."""
         self.after(0, self._restaurar_ui, sucesso)
