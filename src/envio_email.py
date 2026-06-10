@@ -78,7 +78,7 @@ def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_reme
 
     total_alunos = len(lista_alunos)
 
-    # 🚨 CORREÇÃO AQUI: Adicionado enumerate para contar o índice (i) de cada envio
+    # 🚨 CORREÇÃO AQUI: Adicionado enumerate para counting do índice (i) de cada envio
     for i, aluno in enumerate(lista_alunos, 1):
         nome_aluno = aluno['nome']
         email_aluno = aluno['email']
@@ -106,9 +106,12 @@ def disparar_email(lista_alunos, pasta_certificados, email_remetente, senha_reme
                 parte.set_payload(arquivo.read())
             
             encoders.encode_base64(parte)
+            
+            #  CORREÇÃO DO NONAME: Usando a tupla especial para forçar UTF-8 no nome do anexo
             parte.add_header(
                 "Content-Disposition",
-                f'attachment; filename="{nome_ficheiro}"'
+                "attachment",
+                filename=("utf-8", "", nome_ficheiro)
             )
             msg.attach(parte)
             

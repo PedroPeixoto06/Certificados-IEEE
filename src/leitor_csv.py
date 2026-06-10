@@ -12,7 +12,7 @@ def carregar_dados_cvs(caminho_arquivo):
         return participantes
 
     try:
-        with open(caminho_arquivo, mode='r', encoding='latin-1') as arquivo:
+        with open(caminho_arquivo, mode='r', encoding='utf-8') as arquivo:
             leitor_csv = csv.DictReader(arquivo)
             for linha in leitor_csv:
                 # Extraindo nome e e-mail
