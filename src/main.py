@@ -78,11 +78,12 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
     if not participantes:
         raise RuntimeError("A planilha nao contém participantes validos. Verifique se as colunas 'Nome' e 'Email' existem e estao preenchidas corretamente.")
         
-    imagem_base, fonte = carregar_assets(img_base, fonte_path, tam_fonte)
+    # 🚨 AJUSTE: Ignoramos o segundo retorno utilizando o underscore (_), 
+    # pois a fonte agora nasce dinamicamente dentro do loop por aluno
+    imagem_base, _ = carregar_assets(img_base, fonte_path, tam_fonte)
 
-    # ── MUDANÇA 1: REDEFINIÇÃO DA MÉTRICA DE PROGRESSO ──
+    # ── REDEFINIÇÃO DA MÉTRICA DE PROGRESSO ──
     total_alunos = len(participantes)
-    # O total de passos agora é o dobro (1 passo para o PDF + 1 passo para o E-mail de cada um)
     total_passos = total_alunos * 2 
     
     print(f"\n[STATUS] Gerando {total_alunos} certificados...")
@@ -90,7 +91,11 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
     for i, aluno in enumerate(participantes, 1):
         nome = aluno['nome']
         copia_imagem = imagem_base.copy()
-        imagem_pronta = desenhar_nome_centralizado(copia_imagem, nome, fonte, pos_y)
+        
+        # 🚨 AJUSTE: Alterada a assinatura para passar 'fonte_path' e 'tam_fonte'.
+        # Isso permite que o loop reduza o tamanho da letra se o nome for longo demais.
+        imagem_pronta = desenhar_nome_centralizado(copia_imagem, nome, fonte_path, tam_fonte, pos_y)
+        
         exportar_certificado(imagem_pronta, nome, pasta_saida)
         copia_imagem.close()
 
@@ -100,10 +105,9 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
 
     print(f"\n[SUCESSO] Processo de geração de PDFs concluído.")
     
-    # ── MUDANÇA 2: REPASSE DO CALLBACK PARA O MOTOR DE E-MAILS ──
+    # ── REPASSE DO CALLBACK PARA O MOTOR DE E-MAILS ──
     if email_remetente and senha_remetente:
         print("[STATUS] Iniciando disparo de e-mails em lote...")
-        # Injetamos o callback e o total_passos para o envio_email continuar a contagem
         disparar_email(participantes, pasta_saida, email_remetente, senha_remetente, callback_progresso, total_passos)
     else:
         print("[AVISO] Credenciais não fornecidas. Os e-mails não serão enviados.")

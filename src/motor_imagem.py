@@ -1,25 +1,45 @@
 from PIL import Image, ImageDraw, ImageFont
 
 def carregar_assets(caminho_imagem, caminho_fonte, tamanho_fonte=60):
-    """Abre a imagem e a fonte uma única vez (alta performance)."""
+    """Abre a imagem base uma única vez (alta performance)."""
     imagem_base = Image.open(caminho_imagem)
-    fonte = ImageFont.truetype(caminho_fonte, tamanho_fonte)
-    
-    return imagem_base, fonte
+    # Deixamos o retorno da fonte como None porque ela será gerada dinamicamente por aluno
+    return imagem_base, None
 
-def desenhar_nome_centralizado(imagem_copia, nome, fonte, altura_y_fixa):
-    """Pega numa cópia limpa da imagem e desenha o nome perfeitamente ao centro."""
+def desenhar_nome_centralizado(imagem_copia, nome, caminho_fonte, tamanho_base, altura_y_fixa):
+    """Pega numa cópia limpa da imagem, reduz a fonte se o nome for gigante e centraliza o texto."""
     # 1. Cria a caneta EXCLUSIVA para esta cópia
     draw = ImageDraw.Draw(imagem_copia)
     
-    # 2. Descobre o centro horizontal exato da imagem automaticamente
+    # 2. Descobre os limites horizontais da imagem
     largura_imagem = imagem_copia.width
+    # Define uma margem de segurança de 72% da largura total para o texto nunca encostar nas bordas
+    largura_maxima = largura_imagem * 0.72
+    
+    # 3. Inicializa a fonte com o tamanho padrão configurado no JSON
+    tamanho_atual = int(tamanho_base)
+    fonte_atual = ImageFont.truetype(caminho_fonte, tamanho_atual)
+    
+    # 4. Calcula a largura do texto em píxeis usando a bounding box (caixa de envelope)
+    bbox = draw.textbbox((0, 0), nome, font=fonte_atual)
+    largura_texto = bbox[2] - bbox[0]
+    
+    # 5. Loop de redução: se o nome for maior que a margem, encolhe de 2 em 2 pontos
+    while largura_texto > largura_maxima and tamanho_atual > 10:
+        tamanho_atual -= 2
+        fonte_atual = ImageFont.truetype(caminho_fonte, tamanho_atual)
+        
+        # Recalcula a largura com o novo tamanho menor
+        bbox = draw.textbbox((0, 0), nome, font=fonte_atual)
+        largura_texto = bbox[2] - bbox[0]
+    
+    # 6. Descobre o centro horizontal exato da imagem automaticamente
     eixo_x_centro = largura_imagem / 2
     
-    # 3. Desenha o texto usando ancoragem matemática do Pillow
+    # 7. Desenha o texto usando ancoragem matemática do Pillow
     # 'm' (Middle): Centraliza o texto horizontalmente a partir do eixo_x_centro
     # 's' (Baseline): Apoia a base das letras exatamente em cima da altura_y_fixa
-    draw.text((eixo_x_centro, altura_y_fixa), nome, font=fonte, fill="black", anchor="ms")
+    draw.text((eixo_x_centro, altura_y_fixa), nome, font=fonte_atual, fill="black", anchor="ms")
     
     # Devolve a imagem pronta para ser exportada
     return imagem_copia
