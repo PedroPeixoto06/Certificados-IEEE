@@ -1,9 +1,9 @@
 {
     "configuracoes_certificado": {
-        "arquivos": {
-            "imagem_base": "assets/template_padrao.png",
-            "fonte_nome": "assets/Montserrat-Light.ttf",
-            "planilha_dados": "data/dados.csv"
+       "arquivos": {
+            "imagem_base": "assets/templates/certificado.png",
+            "fonte_nome": "assets/fontes/Montserrat-Light.ttf",
+            "planilha_dados": "data/dados_teste.csv"
         },
         "fonte": {
             "tamanho": 40,
