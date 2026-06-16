@@ -1,9 +1,9 @@
 {
     "configuracoes_certificado": {
         "arquivos": {
-            "imagem_base": "C:/Users/Pedro Peixoto/Documents/Certificados-IEEE/Certificados-IEEE/assets/templates/certificado.jpeg",
-            "fonte_nome": "C:/Users/Pedro Peixoto/Documents/Certificados-IEEE/Certificados-IEEE/assets/fontes/Montserrat-Light.ttf",
-            "planilha_dados": "C:/Users/Pedro Peixoto/Documents/Certificados-IEEE/Certificados-IEEE/corrompidos.csv"
+            "imagem_base": "assets/template_padrao.png",
+            "fonte_nome": "assets/Montserrat-Light.ttf",
+            "planilha_dados": "data/dados.csv"
         },
         "fonte": {
             "tamanho": 40,
