@@ -13,8 +13,8 @@ def desenhar_nome_centralizado(imagem_copia, nome, caminho_fonte, tamanho_base, 
     
     # 2. Descobre os limites horizontais da imagem
     largura_imagem = imagem_copia.width
-    # Define uma margem de segurança de 72% da largura total para o texto nunca encostar nas bordas
-    largura_maxima = largura_imagem * 0.72
+    # Define uma margem de segurança de 66% da largura total para o texto nunca encostar nas bordas
+    largura_maxima = largura_imagem * 0.66
     
     # =================================================================================
     # 3. NORMALIZAÇÃO TIPOGRÁFICA (O fim das fontes pequenas!)
