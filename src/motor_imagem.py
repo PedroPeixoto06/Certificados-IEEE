@@ -16,8 +16,27 @@ def desenhar_nome_centralizado(imagem_copia, nome, caminho_fonte, tamanho_base, 
     # Define uma margem de segurança de 72% da largura total para o texto nunca encostar nas bordas
     largura_maxima = largura_imagem * 0.72
     
-    # 3. Inicializa a fonte com o tamanho padrão configurado no JSON
-    tamanho_atual = int(tamanho_base)
+    # =================================================================================
+    # 3. NORMALIZAÇÃO TIPOGRÁFICA (O fim das fontes pequenas!)
+    # =================================================================================
+    # Medimos uma "string de referência" que tem letras altas e baixas
+    string_referencia = "A" 
+    tamanho_teste = 100 
+    fonte_teste = ImageFont.truetype(caminho_fonte, tamanho_teste)
+    
+    # Descobre a altura real do corpo principal da letra em píxeis
+    bbox_teste = draw.textbbox((0, 0), string_referencia, font=fonte_teste)
+    altura_real_pixels = bbox_teste[3] - bbox_teste[1]
+    
+    # Regra de três: calibra a fonte para que o 'A' atinja a altura desejada
+    if altura_real_pixels > 0:
+        fator_escala = tamanho_base / altura_real_pixels
+        tamanho_ideal = int(tamanho_teste * fator_escala)
+    else:
+        tamanho_ideal = int(tamanho_base)
+        
+    # Inicializa a fonte com o novo tamanho perfeitamente calibrado
+    tamanho_atual = tamanho_ideal
     fonte_atual = ImageFont.truetype(caminho_fonte, tamanho_atual)
     
     # 4. Calcula a largura do texto em píxeis usando a bounding box (caixa de envelope)
@@ -25,7 +44,10 @@ def desenhar_nome_centralizado(imagem_copia, nome, caminho_fonte, tamanho_base, 
     largura_texto = bbox[2] - bbox[0]
     
     # 5. Loop de redução: se o nome for maior que a margem, encolhe de 2 em 2 pontos
-    while largura_texto > largura_maxima and tamanho_atual > 10:
+    # Define um tamanho mínimo dinâmico (nunca menor que 30% do tamanho ideal)
+    tamanho_minimo = max(10, int(tamanho_ideal * 0.3))
+    
+    while largura_texto > largura_maxima and tamanho_atual > tamanho_minimo:
         tamanho_atual -= 2
         fonte_atual = ImageFont.truetype(caminho_fonte, tamanho_atual)
         
