@@ -1,11 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
-    ['app_gui.py'],
+    ['src/app_gui.py'],
     pathex=['src'],
     binaries=[],
-    datas=[('assets', 'assets'), ('data', 'data'), ('config.json', '.'), ('logo_IEEE.png', '.')],
+    # O PyInstaller agora vai puxar as pastas inteiras, garantindo que a logo vai junto com os assets
+    datas=[('assets', 'assets'), ('data', 'data')],
     hiddenimports=['main'],
     hookspath=[],
     hooksconfig={},

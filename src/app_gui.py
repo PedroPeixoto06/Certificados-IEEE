@@ -6,16 +6,20 @@ import threading
 import os
 import sys
 
-# ── Adiciona a pasta src/ ao path para importar os módulos do projeto ──
+# ── Descoberta de Caminhos (Adaptado para a nova arquitetura) ──
 if getattr(sys, 'frozen', False):
-    DIRETORIO_ATUAL = sys._MEIPASS
-    # O diretório onde o .exe está rodando (útil se for salvar arquivos)
+    # Quando rodar como .exe, o PyInstaller guarda tudo no _MEIPASS
+    DIRETORIO_RAIZ = sys._MEIPASS
     DIRETORIO_EXECUTAVEL = os.path.dirname(sys.executable)
+    SRC_PATH = os.path.join(sys._MEIPASS, "src")
 else:
+    # Quando rodar no VS Code, este arquivo está dentro da pasta src/
     DIRETORIO_ATUAL = os.path.dirname(os.path.abspath(__file__))
-    DIRETORIO_EXECUTAVEL = DIRETORIO_ATUAL
+    DIRETORIO_RAIZ = os.path.dirname(DIRETORIO_ATUAL) # Volta uma pasta para achar a raiz
+    DIRETORIO_EXECUTAVEL = DIRETORIO_RAIZ
+    SRC_PATH = DIRETORIO_ATUAL
 
-SRC_PATH = os.path.join(DIRETORIO_ATUAL, "src")
+# Garante que a pasta src/ está no "radar" do Python para as importações
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
@@ -161,7 +165,7 @@ class App(ctk.CTk):
         logo_frame.pack(expand=True)
 
         # ── Logo IEEE a partir do arquivo ──
-        logo_path = os.path.join(DIRETORIO_ATUAL, "logo_IEEE.png")
+        logo_path = os.path.join(DIRETORIO_RAIZ, "assets", "logo_IEEE.png")
         if os.path.exists(logo_path):
             pil_logo = Image.open(logo_path)
             
