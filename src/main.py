@@ -1,6 +1,7 @@
 import json
 import os
-import time
+import sys
+from typing import Dict, Any, Optional, Callable
 
 from leitor_csv import carregar_dados_cvs
 from motor_imagem import desenhar_nome_centralizado, carregar_assets
@@ -8,8 +9,9 @@ from exportador import exportar_certificado
 from envio_email import disparar_email
 from validador import validar_insumos
 
-import sys
-# Descobre o caminho da pasta raiz do projeto (uma pasta atrás da src/)
+# --- RESOLUÇÃO DINÂMICA DE DIRETÓRIOS (COMPATIBILIDADE PYINSTALLER) ---
+# Executáveis autônomos extraem seus arquivos em diretórios temporários em tempo de execução.
+# Este bloco intercepta o contexto de execução para garantir o mapeamento de caminhos relativos robustos.
 if getattr(sys, 'frozen', False):
     DIRETORIO_ATUAL = os.path.join(sys._MEIPASS, "src")
     DIRETORIO_RAIZ = sys._MEIPASS
@@ -19,39 +21,54 @@ else:
     DIRETORIO_RAIZ = os.path.dirname(DIRETORIO_ATUAL)
     DIRETORIO_EXECUTAVEL = DIRETORIO_RAIZ
 
-def configuracoes():
+
+def configuracoes() -> Optional[Dict[str, Any]]:
     """
-    Lê o arquivo JSON e retorna um dicionário com os parâmetros de configuração.
-    Isso blinda o código contra valores hardcoded.
+    Carrega e decodifica as diretrizes de layout e automação mapeadas no arquivo JSON.
+
+    Busca prioritariamente o arquivo externo gerado dinamicamente pela interface gráfica
+    junto ao binário executável. Caso não encontre, recorre ao arquivo base embutido na raiz.
+
+    Returns:
+        Optional[Dict[str, Any]]: Dicionário com mapeamentos estruturais se decodificado com sucesso,
+        ou None em caso de falha de leitura ou sintaxe inválida.
     """
-    # 1. Procura primeiro o config.json ao lado do .exe (onde a interface salva as suas escolhas)
     caminho_externo = os.path.join(DIRETORIO_EXECUTAVEL, "config.json")
-    
-    # 2. Se não achar, usa o padrão que veio empacotado dentro da pasta temporária do sistema
     caminho_interno = os.path.join(DIRETORIO_RAIZ, "config.json")
 
-    if os.path.exists(caminho_externo):
-        caminho_arquivo = caminho_externo
-    else:
-        caminho_arquivo = caminho_interno
+    caminho_arquivo = caminho_externo if os.path.exists(caminho_externo) else caminho_interno
 
     if not os.path.exists(caminho_arquivo):
-        print(f"Arquivo de configuração '{caminho_arquivo}' não encontrado.")
+        print(f"[ERRO] Arquivo de configuração '{caminho_arquivo}' não encontrado.")
         return None
     
     try:
         with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
-            config = json.load(arquivo)
+            config: Dict[str, Any] = json.load(arquivo)
             return config
             
     except json.JSONDecodeError:
-        print(f"Erro ao decodificar o arquivo JSON '{caminho_arquivo}'. Verifique a sintaxe.")
+        print(f"[ERRO] Falha de sintaxe ao decodificar o arquivo JSON '{caminho_arquivo}'.")
         return None
     
 
-def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remetente=None):
+def iniciar_geracao(
+    callback_progresso: Optional[Callable[[int, int], None]] = None, 
+    email_remetente: Optional[str] = None, 
+    senha_remetente: Optional[str] = None
+) -> None:
     """
-    Função principal que vai orquestrar as chamadas do sistema.
+    Gerencia o fluxo ponta a ponta de emissão: valida os insumos, consome os dados da
+    planilha limpa, delega a renderização responsiva e dispara os lotes de e-mails de saída.
+
+    Args:
+        callback_progresso (Optional[Callable[[int, int], None]]): Função injetada da UI para 
+            receber o incremento do passo atual em relação ao teto de passos projetado.
+        email_remetente (Optional[str]): Credencial corporativa utilizada para autenticação SMTP.
+        senha_remetente (Optional[str]): Senha de aplicativo de 16 dígitos fornecida pelo provedor.
+
+    Raises:
+        RuntimeError: Aborta a execução caso arquivos vitais estejam ausentes ou corrompidos.
     """
     print("--- INICIANDO MOTOR DE CERTIFICADOS IEEE ---")
 
@@ -76,13 +93,12 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
 
     participantes = carregar_dados_cvs(planilha)
     if not participantes:
-        raise RuntimeError("A planilha nao contém participantes validos. Verifique se as colunas 'Nome' e 'Email' existem e estao preenchidas corretamente.")
+        raise RuntimeError("A planilha não contém participantes válidos. Verifique se as colunas 'Nome' e 'Email' existem e estão preenchidas corretamente.")
         
-    # 🚨 AJUSTE: Ignoramos o segundo retorno utilizando o underscore (_), 
-    # pois a fonte agora nasce dinamicamente dentro do loop por aluno
+    # Carrega a imagem base apenas uma vez na memória para alta performance
     imagem_base, _ = carregar_assets(img_base, fonte_path, tam_fonte)
 
-    # ── REDEFINIÇÃO DA MÉTRICA DE PROGRESSO ──
+    # --- MÉTRICA DE PROGRESSO ---
     total_alunos = len(participantes)
     total_passos = total_alunos * 2 
     
@@ -92,25 +108,24 @@ def iniciar_geracao(callback_progresso=None, email_remetente=None, senha_remeten
         nome = aluno['nome']
         copia_imagem = imagem_base.copy()
         
-        # 🚨 AJUSTE: Alterada a assinatura para passar 'fonte_path' e 'tam_fonte'.
-        # Isso permite que o loop reduza o tamanho da letra se o nome for longo demais.
+        # O motor matemático se encarrega de reduzir a fonte para nomes excessivamente longos
         imagem_pronta = desenhar_nome_centralizado(copia_imagem, nome, fonte_path, tam_fonte, pos_y)
         
         exportar_certificado(imagem_pronta, nome, pasta_saida)
         copia_imagem.close()
 
-        # Avisa a interface usando a nova escala (vai preencher de 0% até exatamente 50%)
+        # Atualiza a barra de progresso da interface gráfica
         if callback_progresso:
             callback_progresso(i, total_passos)
 
-    print(f"\n[SUCESSO] Processo de geração de PDFs concluído.")
+    print("\n[SUCESSO] Processo de geração de PDFs concluído.")
     
-    # ── REPASSE DO CALLBACK PARA O MOTOR DE E-MAILS ──
+    # --- INTEGRAÇÃO COM MÓDULO DE E-MAIL ---
     if email_remetente and senha_remetente:
         print("[STATUS] Iniciando disparo de e-mails em lote...")
         disparar_email(participantes, pasta_saida, email_remetente, senha_remetente, callback_progresso, total_passos)
     else:
         print("[AVISO] Credenciais não fornecidas. Os e-mails não serão enviados.")
-        
+
 if __name__ == "__main__":
     iniciar_geracao()
